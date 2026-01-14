@@ -5,32 +5,19 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
 describe("parsePruneDuration", () => {
-  test("parses days", () => {
-    expect(parsePruneDuration("30d")).toBe(30 * 24 * 60 * 60 * 1000);
-    expect(parsePruneDuration("7d")).toBe(7 * 24 * 60 * 60 * 1000);
-    expect(parsePruneDuration("1d")).toBe(24 * 60 * 60 * 1000);
-  });
-
-  test("parses weeks", () => {
-    expect(parsePruneDuration("2w")).toBe(2 * 7 * 24 * 60 * 60 * 1000);
-    expect(parsePruneDuration("1w")).toBe(7 * 24 * 60 * 60 * 1000);
-  });
-
-  test("parses hours", () => {
-    expect(parsePruneDuration("24h")).toBe(24 * 60 * 60 * 1000);
-    expect(parsePruneDuration("1h")).toBe(60 * 60 * 1000);
-  });
-
-  test("parses months", () => {
-    expect(parsePruneDuration("1m")).toBe(30 * 24 * 60 * 60 * 1000);
-    expect(parsePruneDuration("2m")).toBe(2 * 30 * 24 * 60 * 60 * 1000);
+  test("parses days to milliseconds", () => {
+    expect(parsePruneDuration("30")).toBe(30 * 24 * 60 * 60 * 1000);
+    expect(parsePruneDuration("7")).toBe(7 * 24 * 60 * 60 * 1000);
+    expect(parsePruneDuration("1")).toBe(24 * 60 * 60 * 1000);
+    expect(parsePruneDuration("90")).toBe(90 * 24 * 60 * 60 * 1000);
   });
 
   test("throws on invalid format", () => {
-    expect(() => parsePruneDuration("30")).toThrow();
-    expect(() => parsePruneDuration("d30")).toThrow();
-    expect(() => parsePruneDuration("30x")).toThrow();
+    expect(() => parsePruneDuration("0")).toThrow();
+    expect(() => parsePruneDuration("-5")).toThrow();
+    expect(() => parsePruneDuration("abc")).toThrow();
     expect(() => parsePruneDuration("")).toThrow();
+    expect(() => parsePruneDuration("30d")).toThrow(); // no longer accepts unit suffix
   });
 });
 

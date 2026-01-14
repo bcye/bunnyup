@@ -49,10 +49,12 @@ The output folder is always read from `.bunny.json` configuration.
 {
   "name": "my-site",
   "outputFolder": "dist",
-  "pruneAfter": "30d",
+  "pruneAfter": "30",
   "pullZoneId": 123456
 }
 ```
+
+- `pruneAfter` is the number of days after which old deployments are deleted
 
 ## CI/CD
 

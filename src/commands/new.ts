@@ -86,12 +86,13 @@ export async function newProject(): Promise<void> {
         }),
       pruneAfter: () =>
         p.text({
-          message: "Prune deployments older than:",
-          placeholder: "30d",
-          defaultValue: "30d",
+          message: "Prune deployments older than (days):",
+          placeholder: "30",
+          defaultValue: "30",
           validate: (value) => {
-            if (!/^\d+[dwmh]$/.test(value)) {
-              return 'Use format like "30d", "7d", "2w", "24h"';
+            const num = parseInt(value, 10);
+            if (isNaN(num) || num <= 0) {
+              return "Must be a positive number of days";
             }
           },
         }),

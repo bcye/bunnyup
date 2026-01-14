@@ -97,25 +97,17 @@ export async function writeConfig(config: ProjectConfig, cwd: string = process.c
 }
 
 /**
- * Parse prune duration string (e.g., "30d", "7d", "2w") to milliseconds
+ * Parse prune duration in days (e.g., "30") to milliseconds
  */
-export function parsePruneDuration(duration: string): number {
-  const match = duration.match(/^(\d+)([dwmh])$/);
-  if (!match) {
-    throw new Error(`Invalid duration format: ${duration}. Use format like "30d", "7d", "2w", "24h"`);
+export function parsePruneDuration(days: string): number {
+  if (!/^\d+$/.test(days)) {
+    throw new Error(`Invalid prune duration: ${days}. Must be a positive number of days.`);
   }
-
-  const value = parseInt(match[1]!, 10);
-  const unit = match[2]!;
-
-  const multipliers: Record<string, number> = {
-    h: 60 * 60 * 1000,           // hours
-    d: 24 * 60 * 60 * 1000,      // days
-    w: 7 * 24 * 60 * 60 * 1000,  // weeks
-    m: 30 * 24 * 60 * 60 * 1000, // months (approx)
-  };
-
-  return value * multipliers[unit]!;
+  const value = parseInt(days, 10);
+  if (value <= 0) {
+    throw new Error(`Invalid prune duration: ${days}. Must be a positive number of days.`);
+  }
+  return value * 24 * 60 * 60 * 1000;
 }
 
 /**
