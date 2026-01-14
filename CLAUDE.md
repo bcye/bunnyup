@@ -30,3 +30,38 @@ test("hello world", () => {
   expect(1).toBe(1);
 });
 ```
+
+## This Project: bunnyup
+
+CLI tool for deploying static sites to Bunny.net CDN.
+
+### Development
+
+```bash
+# Run CLI in dev mode
+bun run dev -- <command>
+
+# Run tests
+bun test
+
+# Type check
+bun run typecheck
+
+# Build for npm
+bun run build
+```
+
+### Project Structure
+
+- `src/cli.ts` - Commander entry point
+- `src/commands/` - Individual command implementations
+- `src/api.ts` - Bunny.net API client
+- `src/config.ts` - Configuration and secrets handling
+- `src/git.ts` - Git utilities
+- `tests/` - Test files
+
+### Bunny.net API Docs
+
+- [Pull Zone API](https://docs.bunny.net/reference/pullzonepublic_index)
+- [Storage Zone API](https://docs.bunny.net/reference/storagezonepublic_index)
+- [Edge Storage API](https://docs.bunny.net/reference/edge-storage-api)
