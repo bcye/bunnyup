@@ -164,21 +164,12 @@ export async function newProject(): Promise<void> {
   await writeConfig(projectConfig);
   p.log.success("Configuration saved to .bunny.json");
 
-  // Run deploy
-  p.log.step("Running initial deploy...");
-  await deploy({ noPrune: true, quiet: true });
+  // Run initial deploy (skip prune since there's nothing to prune yet)
+  await deploy({ noPrune: true });
 
-  // Success message
+  // Show dashboard link
   const dashboardUrl = `https://dash.bunny.net/cdn/${pullZone.Id}`;
-
-  p.note(
-    [
-      `${pc.green("🌐")} ${pc.cyan(siteUrl)}`,
-      "",
-      `Dashboard: ${pc.dim(dashboardUrl)}`,
-    ].join("\n"),
-    "Site deployed!"
-  );
+  p.log.info(`Dashboard: ${pc.dim(dashboardUrl)}`);
 
   // Offer to create GitHub workflow
   const createWorkflow = await p.confirm({

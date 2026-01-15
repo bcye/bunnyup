@@ -31,8 +31,9 @@ program
 program
   .command("upload")
   .description("Upload files to a new storage zone version")
-  .action(async () => {
-    await upload();
+  .option("-f, --force", "Upload even with uncommitted changes")
+  .action(async (opts: { force?: boolean }) => {
+    await upload({ force: opts.force });
   });
 
 program
@@ -47,11 +48,11 @@ program
   .command("deploy")
   .description("Upload, activate, and prune in one step")
   .option("--no-prune", "Skip pruning old deployments")
-  .option("-y, --yes", "Skip confirmation prompts")
-  .action(async (opts: { prune: boolean; yes?: boolean }) => {
+  .option("-f, --force", "Upload even with uncommitted changes")
+  .action(async (opts: { prune: boolean; force?: boolean }) => {
     await deploy({
       noPrune: !opts.prune,
-      yes: opts.yes,
+      force: opts.force,
     });
   });
 

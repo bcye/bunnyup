@@ -13,18 +13,15 @@ import { getGitHash, isGitRepo, hasUncommittedChanges } from "../git.ts";
 export interface UploadResult {
   storageZone: StorageZone;
   fileCount: number;
+  gitHash: string;
 }
 
 export interface UploadOptions {
-  quiet?: boolean;
+  force?: boolean;
 }
 
 export async function upload(options: UploadOptions = {}): Promise<UploadResult> {
-  const quiet = options.quiet ?? false;
-
-  if (!quiet) {
-    p.intro(pc.bgCyan(pc.black(" bunny upload ")));
-  }
+  p.intro(pc.bgCyan(pc.black(" bunny upload ")));
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
@@ -35,9 +32,14 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
     process.exit(1);
   }
 
-  // Warn about uncommitted changes
+  // Fail if dirty (unless --force)
   if (await hasUncommittedChanges()) {
-    p.log.warn("You have uncommitted changes. Consider committing first.");
+    if (options.force) {
+      p.log.warn("Uploading with uncommitted changes (--force)");
+    } else {
+      p.cancel("Uncommitted changes. Commit first or use --force to override.");
+      process.exit(1);
+    }
   }
 
   const folder = config.outputFolder;
@@ -68,18 +70,15 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
   let storageZone = await findStorageZoneByName(apiKey, storageZoneName);
 
   if (storageZone) {
-    if (!quiet) {
-      p.log.warn(`Storage zone "${storageZoneName}" already exists. Reusing.`);
-    }
+    p.log.warn(`Version ${pc.cyan(gitHash)} already uploaded. Reusing.`);
   } else {
-    // Create storage zone
-    spinner.start(`Creating storage zone ${pc.dim(storageZoneName)}...`);
+    spinner.start(`Creating ${pc.dim(storageZoneName)}`);
     storageZone = await createStorageZone(apiKey, storageZoneName);
-    spinner.stop("Storage zone created");
+    spinner.stop(`Created ${pc.dim(storageZoneName)}`);
   }
 
   // Upload files
-  spinner.start(`Uploading ${files.length} files...`);
+  spinner.start(`Uploading 0/${files.length} files`);
 
   let uploaded = 0;
   for (const relativePath of files) {
@@ -90,17 +89,16 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
     await uploadFile(storageZone.Name, storageZone.Password, relativePath, content);
 
     uploaded++;
-    spinner.message(`Uploading ${uploaded}/${files.length} files...`);
+    spinner.message(`Uploading ${uploaded}/${files.length} files`);
   }
 
   spinner.stop(`Uploaded ${files.length} files`);
 
-  if (!quiet) {
-    p.outro(pc.green(`Uploaded version ${pc.cyan(gitHash)}`));
-  }
+  p.outro(`${pc.green("✓")} Version ${pc.cyan(gitHash)} ready`);
 
   return {
     storageZone,
     fileCount: files.length,
+    gitHash,
   };
 }

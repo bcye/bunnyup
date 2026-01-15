@@ -36,10 +36,11 @@ npm run build && bn deploy
 
 ### Options
 
-- `bn deploy --no-prune` - Skip pruning old versions
-- `bn deploy -y` / `bn prune -y` - Skip confirmation prompts
+- `--no-prune` - Skip pruning old versions (deploy)
+- `-f, --force` - Upload with uncommitted git changes (upload, deploy)
+- `-y, --yes` - Skip confirmation prompts (prune)
 
-The output folder is always read from `.bunny.json` configuration.
+Requires clean git working directory by default. Use `--force` to override.
 
 ## Configuration
 

@@ -9,7 +9,6 @@ import {
 
 export interface PruneOptions {
   yes?: boolean;
-  quiet?: boolean;
 }
 
 export interface PruneResult {
@@ -18,17 +17,13 @@ export interface PruneResult {
 }
 
 export async function prune(options: PruneOptions = {}): Promise<PruneResult> {
-  const quiet = options.quiet ?? false;
-
-  if (!quiet) {
-    p.intro(pc.bgCyan(pc.black(" bunny prune ")));
-  }
+  p.intro(pc.bgCyan(pc.black(" bunny prune ")));
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
 
   const spinner = p.spinner();
-  spinner.start("Finding old deployments...");
+  spinner.start("Finding old deployments");
 
   // Get current active storage zone
   const pullZone = await getPullZone(apiKey, config.pullZoneId);
@@ -58,56 +53,47 @@ export async function prune(options: PruneOptions = {}): Promise<PruneResult> {
   spinner.stop(`Found ${zonesToPrune.length} old deployment(s)`);
 
   if (zonesToPrune.length === 0) {
-    if (!quiet) {
-      p.outro("Nothing to prune.");
-    }
+    p.outro("Nothing to prune");
     return { deleted: 0, skipped: 0 };
   }
 
   // Show what will be deleted
-  if (!quiet) {
-    const lines = zonesToPrune.map((z) => {
-      const date = new Date(z.DateModified).toLocaleDateString();
-      return `${pc.dim(z.Name)} (${date})`;
-    });
-    p.note(lines.join("\n"), `Will delete ${zonesToPrune.length} zone(s)`);
-  }
+  const lines = zonesToPrune.map((z) => {
+    const date = new Date(z.DateModified).toLocaleDateString();
+    return `  ${pc.dim(z.Name)} (${date})`;
+  });
+  p.log.info(`Will delete:\n${lines.join("\n")}`);
 
   // Confirm unless --yes
-  if (!options.yes && !quiet) {
+  if (!options.yes) {
     const shouldDelete = await p.confirm({
       message: `Delete ${zonesToPrune.length} old deployment(s)?`,
       initialValue: true,
     });
 
     if (p.isCancel(shouldDelete) || !shouldDelete) {
-      p.cancel("Prune cancelled.");
+      p.cancel("Cancelled");
       return { deleted: 0, skipped: zonesToPrune.length };
     }
   }
 
   // Delete zones
-  spinner.start(`Deleting ${zonesToPrune.length} zone(s)...`);
+  spinner.start(`Deleting 0/${zonesToPrune.length}`);
 
   let deleted = 0;
   for (const zone of zonesToPrune) {
     try {
       await deleteStorageZone(apiKey, zone.Id);
       deleted++;
-      spinner.message(`Deleted ${deleted}/${zonesToPrune.length}...`);
+      spinner.message(`Deleting ${deleted}/${zonesToPrune.length}`);
     } catch (error) {
-      // Log but continue
-      if (!quiet) {
-        p.log.warn(`Failed to delete ${zone.Name}: ${error}`);
-      }
+      p.log.warn(`Failed to delete ${zone.Name}`);
     }
   }
 
   spinner.stop(`Deleted ${deleted} deployment(s)`);
 
-  if (!quiet) {
-    p.outro(pc.green("Prune complete!"));
-  }
+  p.outro(pc.green("✓") + " Prune complete");
 
   return { deleted, skipped: zonesToPrune.length - deleted };
 }
