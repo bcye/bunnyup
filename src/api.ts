@@ -52,12 +52,34 @@ async function request<T>(
     );
   }
 
-  // Handle 204 No Content
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
   return response.json() as Promise<T>;
+}
+
+async function requestVoid(
+  apiKey: string,
+  method: string,
+  path: string,
+  body?: unknown
+): Promise<void> {
+  const url = `${API_BASE}${path}`;
+  const response = await fetch(url, {
+    method,
+    headers: {
+      AccessKey: apiKey,
+      Accept: "application/json",
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new BunnyApiError(
+      `API request failed: ${response.status} ${response.statusText}`,
+      response.status,
+      text
+    );
+  }
 }
 
 // ============ Pull Zone API ============
@@ -104,9 +126,10 @@ export async function updatePullZoneStorageZone(
   pullZoneId: number,
   storageZoneId: number
 ): Promise<void> {
-  await request<void>(apiKey, "POST", `/pullzone/${pullZoneId}`, {
+  await request<PullZone>(apiKey, "POST", `/pullzone/${pullZoneId}`, {
     StorageZoneId: storageZoneId,
   });
+  // Returns updated PullZone but we don't need it
 }
 
 // ============ Storage Zone API ============
@@ -139,7 +162,7 @@ export async function deleteStorageZone(
   apiKey: string,
   id: number
 ): Promise<void> {
-  await request<void>(
+  await requestVoid(
     apiKey,
     "DELETE",
     `/storagezone/${id}?deleteLinkedPullZones=false`
