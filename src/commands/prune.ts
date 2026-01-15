@@ -1,11 +1,7 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { requireApiKey, requireConfig, parsePruneDuration } from "../config.ts";
-import {
-  listStorageZones,
-  deleteStorageZone,
-  getPullZone,
-} from "../api.ts";
+import { listStorageZones, deleteStorageZone, getPullZone } from "../api.ts";
 
 export interface PruneOptions {
   yes?: boolean;
@@ -17,7 +13,7 @@ export interface PruneResult {
 }
 
 export async function prune(options: PruneOptions = {}): Promise<PruneResult> {
-  p.intro(pc.bgCyan(pc.black(" bunny prune ")));
+  p.intro(pc.bgCyan(pc.black(" bunnyup prune ")));
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
@@ -32,7 +28,7 @@ export async function prune(options: PruneOptions = {}): Promise<PruneResult> {
   // List all storage zones for this project
   const allZones = await listStorageZones(apiKey);
   const projectZones = allZones.filter((z) =>
-    z.Name.startsWith(`${config.name}-`)
+    z.Name.startsWith(`${config.name}-`),
   );
 
   // Parse prune duration

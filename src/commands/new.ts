@@ -16,7 +16,8 @@ import {
 } from "../api.ts";
 import { deploy } from "./deploy.ts";
 
-const WORKFLOW_URL = "https://raw.githubusercontent.com/bcye/bunnyup/main/examples/github-deploy.yml";
+const WORKFLOW_URL =
+  "https://raw.githubusercontent.com/bcye/bunnyup/main/examples/github-deploy.yml";
 
 async function fetchWorkflowTemplate(): Promise<string | null> {
   try {
@@ -31,7 +32,7 @@ async function fetchWorkflowTemplate(): Promise<string | null> {
 }
 
 export async function newProject(): Promise<void> {
-  p.intro(pc.bgCyan(pc.black(" bunny new ")));
+  p.intro(pc.bgCyan(pc.black(" bunnyup new ")));
 
   const apiKey = await requireApiKey();
 
@@ -93,7 +94,7 @@ export async function newProject(): Promise<void> {
         p.cancel("Setup cancelled.");
         process.exit(1);
       },
-    }
+    },
   );
 
   // Check availability
@@ -104,7 +105,7 @@ export async function newProject(): Promise<void> {
   if (!available) {
     spinner.stop("Name not available");
     p.cancel(
-      `The name "${config.name}" is already taken. Please choose a different name.`
+      `The name "${config.name}" is already taken. Please choose a different name.`,
     );
     process.exit(1);
   }
@@ -121,7 +122,7 @@ export async function newProject(): Promise<void> {
       `${pc.dim("Prune:")} ${config.pruneAfter} days`,
       `${pc.dim("URL:")} ${siteUrl}`,
     ].join("\n"),
-    "Configuration"
+    "Configuration",
   );
 
   const shouldCreate = await p.confirm({
@@ -153,7 +154,7 @@ export async function newProject(): Promise<void> {
   };
 
   await writeConfig(projectConfig);
-  p.log.success("Configuration saved to .bunny.json");
+  p.log.success("Configuration saved to .bunnyup.json");
 
   // Run initial deploy (skip prune since there's nothing to prune yet)
   await deploy({ noPrune: true });
@@ -181,13 +182,15 @@ export async function newProject(): Promise<void> {
         p.log.success(`Created ${pc.dim(".github/workflows/deploy.yml")}`);
         p.note(
           `Add ${pc.cyan("BUNNY_API_KEY")} to your repository secrets.`,
-          "Next step"
+          "Next step",
         );
       } catch {
         p.log.warn("Could not create workflow file.");
       }
     } else {
-      p.log.warn("Could not fetch workflow template. See https://github.com/bcye/bunnyup/tree/main/examples");
+      p.log.warn(
+        "Could not fetch workflow template. See https://github.com/bcye/bunnyup/tree/main/examples",
+      );
     }
   }
 

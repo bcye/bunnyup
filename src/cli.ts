@@ -10,7 +10,7 @@ import { prune } from "./commands/prune.ts";
 const program = new Command();
 
 program
-  .name("bunny")
+  .name("bunnyup")
   .description("CLI tool for managing sites deployed with Bunny.net")
   .version("0.1.0");
 

@@ -4,7 +4,7 @@ import { getApiKey, setApiKey } from "../config.ts";
 import { validateApiKey } from "../api.ts";
 
 export async function login(): Promise<void> {
-  p.intro(pc.bgCyan(pc.black(" bunny login ")));
+  p.intro(pc.bgCyan(pc.black(" bunnyup login ")));
 
   // Check for existing key
   const existingKey = await getApiKey();
@@ -22,7 +22,7 @@ export async function login(): Promise<void> {
 
   p.note(
     `Get your API key from:\n${pc.cyan("https://dash.bunny.net/account/api-key")}`,
-    "API Key"
+    "API Key",
   );
 
   const apiKey = await p.password({
@@ -57,13 +57,13 @@ export async function login(): Promise<void> {
   } catch (error) {
     spinner.stop("Could not store in keychain");
     p.log.warn(
-      `Could not store in OS keychain. Set ${pc.cyan("BUNNY_API_KEY")} environment variable instead.`
+      `Could not store in OS keychain. Set ${pc.cyan("BUNNY_API_KEY")} environment variable instead.`,
     );
   }
 
   p.note(
     `For CI/CD, set the ${pc.cyan("BUNNY_API_KEY")} environment variable.`,
-    "Tip"
+    "Tip",
   );
 
   p.outro(pc.green("Logged in successfully!"));
