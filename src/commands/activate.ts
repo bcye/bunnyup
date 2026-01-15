@@ -35,6 +35,7 @@ export async function activate(options: ActivateOptions = {}): Promise<string> {
     }
 
     const storageZoneName = `${config.name}-${gitHash}`;
+    console.log(storageZoneName);
 
     // Find storage zone
     const spinner = p.spinner();

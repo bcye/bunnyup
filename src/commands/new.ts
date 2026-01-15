@@ -126,7 +126,7 @@ export async function newProject(): Promise<void> {
   );
 
   const shouldCreate = await p.confirm({
-    message: "Create this site?",
+    message: "Create and deploy this site now?",
     initialValue: true,
   });
 

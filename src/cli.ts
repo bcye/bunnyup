@@ -11,7 +11,7 @@ const program = new Command();
 
 program
   .name("bunnyup")
-  .description("CLI tool for managing sites deployed with Bunny.net")
+  .description("CLI tool for deploying sites with Bunny.net")
   .version("0.1.0");
 
 program
