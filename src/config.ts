@@ -1,7 +1,7 @@
 import { secrets } from "bun";
 import { join } from "path";
 
-const SERVICE_NAME = "net.bunny.cli";
+const SERVICE_NAME = "bunnyup";
 const SECRET_NAME = "api-key";
 
 export interface ProjectConfig {
@@ -73,7 +73,9 @@ export function getConfigPath(cwd: string = process.cwd()): string {
 /**
  * Read project config from .bunny.json
  */
-export async function readConfig(cwd: string = process.cwd()): Promise<ProjectConfig | null> {
+export async function readConfig(
+  cwd: string = process.cwd(),
+): Promise<ProjectConfig | null> {
   const configPath = getConfigPath(cwd);
   const file = Bun.file(configPath);
 
@@ -91,7 +93,10 @@ export async function readConfig(cwd: string = process.cwd()): Promise<ProjectCo
 /**
  * Write project config to .bunny.json
  */
-export async function writeConfig(config: ProjectConfig, cwd: string = process.cwd()): Promise<void> {
+export async function writeConfig(
+  config: ProjectConfig,
+  cwd: string = process.cwd(),
+): Promise<void> {
   const configPath = getConfigPath(cwd);
   await Bun.write(configPath, JSON.stringify(config, null, 2) + "\n");
 }
@@ -101,11 +106,15 @@ export async function writeConfig(config: ProjectConfig, cwd: string = process.c
  */
 export function parsePruneDuration(days: string): number {
   if (!/^\d+$/.test(days)) {
-    throw new Error(`Invalid prune duration: ${days}. Must be a positive number of days.`);
+    throw new Error(
+      `Invalid prune duration: ${days}. Must be a positive number of days.`,
+    );
   }
   const value = parseInt(days, 10);
   if (value <= 0) {
-    throw new Error(`Invalid prune duration: ${days}. Must be a positive number of days.`);
+    throw new Error(
+      `Invalid prune duration: ${days}. Must be a positive number of days.`,
+    );
   }
   return value * 24 * 60 * 60 * 1000;
 }
@@ -116,8 +125,10 @@ export function parsePruneDuration(days: string): number {
 export async function requireApiKey(): Promise<string> {
   const apiKey = await getApiKey();
   if (!apiKey) {
-    const pc = await import("picocolors").then(m => m.default);
-    console.error(`${pc.red("Error:")} Not logged in. Run ${pc.cyan("bn login")} first.`);
+    const pc = await import("picocolors").then((m) => m.default);
+    console.error(
+      `${pc.red("Error:")} Not logged in. Run ${pc.cyan("bn login")} first.`,
+    );
     process.exit(1);
   }
   return apiKey;
@@ -129,8 +140,10 @@ export async function requireApiKey(): Promise<string> {
 export async function requireConfig(): Promise<RequiredProjectConfig> {
   const config = await readConfig();
   if (!config || !config.pullZoneId) {
-    const pc = await import("picocolors").then(m => m.default);
-    console.error(`${pc.red("Error:")} No configuration found. Run ${pc.cyan("bn new")} first.`);
+    const pc = await import("picocolors").then((m) => m.default);
+    console.error(
+      `${pc.red("Error:")} No configuration found. Run ${pc.cyan("bn new")} first.`,
+    );
     process.exit(1);
   }
   return config as RequiredProjectConfig;
@@ -139,7 +152,9 @@ export async function requireConfig(): Promise<RequiredProjectConfig> {
 /**
  * Get default project name from package.json or folder name
  */
-export async function getDefaultProjectName(cwd: string = process.cwd()): Promise<string> {
+export async function getDefaultProjectName(
+  cwd: string = process.cwd(),
+): Promise<string> {
   const pkgPath = join(cwd, "package.json");
   const pkgFile = Bun.file(pkgPath);
 
