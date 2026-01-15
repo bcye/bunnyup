@@ -16,28 +16,19 @@ import {
 } from "../api.ts";
 import { deploy } from "./deploy.ts";
 
-const EXAMPLE_WORKFLOW = `name: Deploy to Bunny.net
+const WORKFLOW_URL = "https://raw.githubusercontent.com/bcye/bunnyup/main/examples/github-deploy.yml";
 
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-
-      - run: bun install
-
-      - run: bun run build
-
-      - run: bunx bunnyup deploy
-        env:
-          BUNNY_API_KEY: \${{ secrets.BUNNY_API_KEY }}
-`;
+async function fetchWorkflowTemplate(): Promise<string | null> {
+  try {
+    const response = await fetch(WORKFLOW_URL);
+    if (response.ok) {
+      return await response.text();
+    }
+  } catch {
+    // Fall through
+  }
+  return null;
+}
 
 export async function newProject(): Promise<void> {
   p.intro(pc.bgCyan(pc.black(" bunny new ")));
@@ -127,7 +118,7 @@ export async function newProject(): Promise<void> {
     [
       `${pc.dim("Name:")} ${config.name}`,
       `${pc.dim("Output:")} ${config.outputFolder}`,
-      `${pc.dim("Prune:")} ${config.pruneAfter}`,
+      `${pc.dim("Prune:")} ${config.pruneAfter} days`,
       `${pc.dim("URL:")} ${siteUrl}`,
     ].join("\n"),
     "Configuration"
@@ -178,19 +169,25 @@ export async function newProject(): Promise<void> {
   });
 
   if (!p.isCancel(createWorkflow) && createWorkflow) {
-    const examplesDir = join(process.cwd(), "examples");
-    const workflowPath = join(examplesDir, "github-deploy.yml");
+    const workflowContent = await fetchWorkflowTemplate();
 
-    try {
-      await mkdir(examplesDir, { recursive: true });
-      await Bun.write(workflowPath, EXAMPLE_WORKFLOW);
-      p.log.success(`Created ${pc.dim("examples/github-deploy.yml")}`);
-      p.note(
-        `Copy to ${pc.cyan(".github/workflows/")} and add ${pc.cyan("BUNNY_API_KEY")} secret.`,
-        "Next step"
-      );
-    } catch {
-      p.log.warn("Could not create example workflow file.");
+    if (workflowContent) {
+      const workflowDir = join(process.cwd(), ".github", "workflows");
+      const workflowPath = join(workflowDir, "deploy.yml");
+
+      try {
+        await mkdir(workflowDir, { recursive: true });
+        await Bun.write(workflowPath, workflowContent);
+        p.log.success(`Created ${pc.dim(".github/workflows/deploy.yml")}`);
+        p.note(
+          `Add ${pc.cyan("BUNNY_API_KEY")} to your repository secrets.`,
+          "Next step"
+        );
+      } catch {
+        p.log.warn("Could not create workflow file.");
+      }
+    } else {
+      p.log.warn("Could not fetch workflow template. See https://github.com/bcye/bunnyup/tree/main/examples");
     }
   }
 

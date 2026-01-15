@@ -10,6 +10,8 @@ import {
 } from "../api.ts";
 import { getGitHash, isGitRepo, hasUncommittedChanges } from "../git.ts";
 
+const CONCURRENT_UPLOADS = 5;
+
 export interface UploadResult {
   storageZone: StorageZone;
   fileCount: number;
@@ -70,27 +72,41 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
   let storageZone = await findStorageZoneByName(apiKey, storageZoneName);
 
   if (storageZone) {
-    p.log.warn(`Version ${pc.cyan(gitHash)} already uploaded. Reusing.`);
+    if (options.force) {
+      p.log.warn(`Version ${pc.cyan(gitHash)} exists, re-uploading (--force)`);
+    } else {
+      p.cancel(`Version ${pc.cyan(gitHash)} already uploaded. Use --force to re-upload.`);
+      process.exit(1);
+    }
   } else {
     spinner.start(`Creating ${pc.dim(storageZoneName)}`);
     storageZone = await createStorageZone(apiKey, storageZoneName);
     spinner.stop(`Created ${pc.dim(storageZoneName)}`);
   }
 
-  // Upload files
+  // Upload files in parallel with streaming
   spinner.start(`Uploading 0/${files.length} files`);
 
   let uploaded = 0;
-  for (const relativePath of files) {
-    const filePath = join(folderPath, relativePath);
-    const file = Bun.file(filePath);
-    const content = await file.arrayBuffer();
+  const queue = [...files];
 
-    await uploadFile(storageZone.Name, storageZone.Password, relativePath, content);
+  async function uploadNext(): Promise<void> {
+    while (queue.length > 0) {
+      const relativePath = queue.shift()!;
+      const filePath = join(folderPath, relativePath);
+      const file = Bun.file(filePath);
 
-    uploaded++;
-    spinner.message(`Uploading ${uploaded}/${files.length} files`);
+      // Stream file directly to API (no buffering)
+      await uploadFile(storageZone!.Name, storageZone!.Password, relativePath, file);
+
+      uploaded++;
+      spinner.message(`Uploading ${uploaded}/${files.length} files`);
+    }
   }
+
+  // Start concurrent uploaders
+  const workers = Array.from({ length: CONCURRENT_UPLOADS }, () => uploadNext());
+  await Promise.all(workers);
 
   spinner.stop(`Uploaded ${files.length} files`);
 

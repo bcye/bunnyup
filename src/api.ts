@@ -185,7 +185,7 @@ export async function uploadFile(
   storageZoneName: string,
   password: string,
   remotePath: string,
-  content: ArrayBuffer
+  file: Blob
 ): Promise<void> {
   const url = `${STORAGE_BASE}/${storageZoneName}/${remotePath}`;
   const response = await fetch(url, {
@@ -195,7 +195,7 @@ export async function uploadFile(
       "Content-Type": "application/octet-stream",
       Accept: "application/json",
     },
-    body: content,
+    body: file.stream(),
   });
 
   if (!response.ok) {
