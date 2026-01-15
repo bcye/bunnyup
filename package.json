@@ -1,11 +1,43 @@
 {
   "name": "bunnyup",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "description": "CLI tool for managing sites deployed with Bunny.net",
   "type": "module",
+  "bin": {
+    "bn": "./bin/cli.js",
+    "bunny": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --outfile bin/cli.js --target bun",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "@clack/prompts": "^0.9.0",
+    "picocolors": "^1.1.0"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^22.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"
-  }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "bunny",
+    "bunnycdn",
+    "cdn",
+    "deploy",
+    "cli"
+  ],
+  "license": "MIT"
 }
