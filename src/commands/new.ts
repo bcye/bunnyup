@@ -15,6 +15,7 @@ import {
   createStorageZone,
 } from "../api.ts";
 import { deploy } from "./deploy.ts";
+import { isGitRepo, hasUncommittedChanges } from "../git.ts";
 
 const WORKFLOW_URL =
   "https://raw.githubusercontent.com/bcye/bunnyup/main/examples/github-deploy.yml";
@@ -33,6 +34,19 @@ async function fetchWorkflowTemplate(): Promise<string | null> {
 
 export async function newProject(): Promise<void> {
   p.intro(pc.bgCyan(pc.black(" bunnyup new ")));
+
+  // Check git repo is clean
+  if (!(await isGitRepo())) {
+    p.cancel("Not a git repository. bunnyup requires git for versioning.");
+    process.exit(1);
+  }
+
+  if (await hasUncommittedChanges()) {
+    p.cancel(
+      "Repository has uncommitted changes. Commit or stash changes before running 'bunnyup new'.",
+    );
+    process.exit(1);
+  }
 
   const apiKey = await requireApiKey();
 
@@ -157,7 +171,8 @@ export async function newProject(): Promise<void> {
   p.log.success("Configuration saved to .bunnyup.json");
 
   // Run initial deploy (skip prune since there's nothing to prune yet)
-  await deploy({ noPrune: true });
+  // Use --force because .bunnyup.json makes the repo dirty
+  await deploy({ noPrune: true, force: true });
 
   // Show dashboard link
   const dashboardUrl = `https://dash.bunny.net/cdn/${pullZone.Id}`;
