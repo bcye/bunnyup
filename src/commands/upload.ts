@@ -22,8 +22,10 @@ export interface UploadOptions {
   force?: boolean;
 }
 
-export async function upload(options: UploadOptions = {}): Promise<UploadResult> {
-  p.intro(pc.bgCyan(pc.black(" bunny upload ")));
+export async function upload(
+  options: UploadOptions = {},
+): Promise<UploadResult> {
+  p.intro(pc.bgCyan(pc.black(" bunnyup upload ")));
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
@@ -51,9 +53,13 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
   let files: string[] = [];
   try {
     const glob = new Bun.Glob("**/*");
-    files = await Array.fromAsync(glob.scan({ cwd: folderPath, onlyFiles: true }));
+    files = await Array.fromAsync(
+      glob.scan({ cwd: folderPath, onlyFiles: true }),
+    );
   } catch {
-    p.cancel(`Output folder "${folder}" does not exist. Build your project first.`);
+    p.cancel(
+      `Output folder "${folder}" does not exist. Build your project first.`,
+    );
     process.exit(1);
   }
 
@@ -75,7 +81,9 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
     if (options.force) {
       p.log.warn(`Version ${pc.cyan(gitHash)} exists, re-uploading (--force)`);
     } else {
-      p.cancel(`Version ${pc.cyan(gitHash)} already uploaded. Use --force to re-upload.`);
+      p.cancel(
+        `Version ${pc.cyan(gitHash)} already uploaded. Use --force to re-upload.`,
+      );
       process.exit(1);
     }
   } else {
@@ -97,7 +105,12 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
       const file = Bun.file(filePath);
 
       // Stream file directly to API (no buffering)
-      await uploadFile(storageZone!.Name, storageZone!.Password, relativePath, file);
+      await uploadFile(
+        storageZone!.Name,
+        storageZone!.Password,
+        relativePath,
+        file,
+      );
 
       uploaded++;
       spinner.message(`Uploading ${uploaded}/${files.length} files`);
@@ -105,7 +118,9 @@ export async function upload(options: UploadOptions = {}): Promise<UploadResult>
   }
 
   // Start concurrent uploaders
-  const workers = Array.from({ length: CONCURRENT_UPLOADS }, () => uploadNext());
+  const workers = Array.from({ length: CONCURRENT_UPLOADS }, () =>
+    uploadNext(),
+  );
   await Promise.all(workers);
 
   spinner.stop(`Uploaded ${files.length} files`);

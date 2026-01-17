@@ -4,17 +4,13 @@
   "description": "CLI tool for managing sites deployed with Bunny.net",
   "type": "module",
   "bin": {
-    "bn": "./bin/cli.js",
-    "bunny": "./bin/cli.js"
+    "bn": "./src/cli.ts",
+    "bunny": "./src/cli.ts"
   },
   "files": [
-    "bin",
     "src"
   ],
   "scripts": {
-    "dev": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --outfile bin/cli.js --target bun",
-    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -39,5 +35,5 @@
     "deploy",
     "cli"
   ],
-  "license": "MIT"
+  "license": "MPL-2.0"
 }

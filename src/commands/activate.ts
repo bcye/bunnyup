@@ -14,7 +14,7 @@ export interface ActivateOptions {
 }
 
 export async function activate(options: ActivateOptions = {}): Promise<string> {
-  p.intro(pc.bgCyan(pc.black(" bunny activate ")));
+  p.intro(pc.bgCyan(pc.black(" bunnyup activate ")));
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
@@ -35,6 +35,7 @@ export async function activate(options: ActivateOptions = {}): Promise<string> {
     }
 
     const storageZoneName = `${config.name}-${gitHash}`;
+    console.log(storageZoneName);
 
     // Find storage zone
     const spinner = p.spinner();
@@ -45,7 +46,9 @@ export async function activate(options: ActivateOptions = {}): Promise<string> {
 
     if (!zone) {
       spinner.stop("Not found");
-      p.cancel(`Version ${pc.cyan(gitHash)} not uploaded. Run ${pc.cyan("bn upload")} first.`);
+      p.cancel(
+        `Version ${pc.cyan(gitHash)} not uploaded. Run ${pc.cyan("bn upload")} first.`,
+      );
       process.exit(1);
     }
 

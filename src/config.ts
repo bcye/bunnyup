@@ -15,7 +15,7 @@ export interface RequiredProjectConfig extends ProjectConfig {
   pullZoneId: number;
 }
 
-const CONFIG_FILE = ".bunny.json";
+const CONFIG_FILE = ".bunnyup.json";
 
 /**
  * Get the API key from Bun.secrets (keychain) or BUNNY_API_KEY env var
@@ -71,7 +71,7 @@ export function getConfigPath(cwd: string = process.cwd()): string {
 }
 
 /**
- * Read project config from .bunny.json
+ * Read project config from .bunnyup.json
  */
 export async function readConfig(
   cwd: string = process.cwd(),
@@ -91,7 +91,7 @@ export async function readConfig(
 }
 
 /**
- * Write project config to .bunny.json
+ * Write project config to .bunnyup.json
  */
 export async function writeConfig(
   config: ProjectConfig,

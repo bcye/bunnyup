@@ -19,7 +19,7 @@ export class BunnyApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public body?: string
+    public body?: string,
   ) {
     super(message);
     this.name = "BunnyApiError";
@@ -30,7 +30,7 @@ async function request<T>(
   apiKey: string,
   method: string,
   path: string,
-  body?: unknown
+  body?: unknown,
 ): Promise<T> {
   const url = `${API_BASE}${path}`;
   const response = await fetch(url, {
@@ -45,10 +45,11 @@ async function request<T>(
 
   if (!response.ok) {
     const text = await response.text();
+    console.error(`API request failed: ${response.status} ${text}`);
     throw new BunnyApiError(
       `API request failed: ${response.status} ${response.statusText}`,
       response.status,
-      text
+      text,
     );
   }
 
@@ -64,13 +65,13 @@ async function request<T>(
 
 export async function checkPullZoneAvailability(
   apiKey: string,
-  name: string
+  name: string,
 ): Promise<boolean> {
   const result = await request<{ Available: boolean }>(
     apiKey,
     "POST",
     "/pullzone/checkavailability",
-    { Name: name }
+    { Name: name },
   );
   return result.Available;
 }
@@ -78,7 +79,7 @@ export async function checkPullZoneAvailability(
 export async function createPullZone(
   apiKey: string,
   name: string,
-  storageZoneId: number
+  storageZoneId: number,
 ): Promise<PullZone> {
   return request<PullZone>(apiKey, "POST", "/pullzone", {
     Name: name,
@@ -95,17 +96,23 @@ export async function createPullZone(
   });
 }
 
-export async function getPullZone(apiKey: string, id: number): Promise<PullZone> {
+export async function getPullZone(
+  apiKey: string,
+  id: number,
+): Promise<PullZone> {
   return request<PullZone>(apiKey, "GET", `/pullzone/${id}`);
 }
 
 export async function updatePullZoneStorageZone(
   apiKey: string,
   pullZoneId: number,
-  storageZoneId: number
+  storageZoneId: number,
 ): Promise<void> {
   await request<void>(apiKey, "POST", `/pullzone/${pullZoneId}`, {
     StorageZoneId: storageZoneId,
+    OriginType: 2,
+    OriginHostHeader: "",
+    OriginUrl: "",
   });
 }
 
@@ -113,14 +120,26 @@ export async function updatePullZoneStorageZone(
 
 export async function createStorageZone(
   apiKey: string,
-  name: string
+  name: string,
 ): Promise<StorageZone> {
   return request<StorageZone>(apiKey, "POST", "/storagezone", {
     Name: name,
     Region: "DE",
     ZoneTier: "Edge",
     ReplicationRegions: [
-      "DE", "UK", "ES", "CZ", "SE", "LA", "MI", "NY", "WA", "HK", "SYD", "JP", "BR", "JH"
+      "UK",
+      "ES",
+      "CZ",
+      "SE",
+      "LA",
+      "MI",
+      "NY",
+      "WA",
+      "HK",
+      "SYD",
+      "JP",
+      "BR",
+      "JH",
     ],
   });
 }
@@ -129,7 +148,7 @@ export async function listStorageZones(apiKey: string): Promise<StorageZone[]> {
   const result = await request<{ Items: StorageZone[] } | StorageZone[]>(
     apiKey,
     "GET",
-    "/storagezone?page=0&perPage=1000&includeDeleted=false"
+    "/storagezone?page=0&perPage=1000&includeDeleted=false",
   );
   // API returns either { Items: [...] } or just [...]
   return Array.isArray(result) ? result : result.Items;
@@ -137,18 +156,18 @@ export async function listStorageZones(apiKey: string): Promise<StorageZone[]> {
 
 export async function deleteStorageZone(
   apiKey: string,
-  id: number
+  id: number,
 ): Promise<void> {
   await request<void>(
     apiKey,
     "DELETE",
-    `/storagezone/${id}?deleteLinkedPullZones=false`
+    `/storagezone/${id}?deleteLinkedPullZones=false`,
   );
 }
 
 export async function findStorageZoneByName(
   apiKey: string,
-  name: string
+  name: string,
 ): Promise<StorageZone | undefined> {
   const zones = await listStorageZones(apiKey);
   return zones.find((z) => z.Name === name);
@@ -162,7 +181,7 @@ export async function uploadFile(
   storageZoneName: string,
   password: string,
   remotePath: string,
-  file: Blob
+  file: Blob,
 ): Promise<void> {
   const url = `${STORAGE_BASE}/${storageZoneName}/${remotePath}`;
   const response = await fetch(url, {
@@ -180,7 +199,7 @@ export async function uploadFile(
     throw new BunnyApiError(
       `Upload failed: ${response.status} ${response.statusText}`,
       response.status,
-      text
+      text,
     );
   }
 }
