@@ -20,12 +20,15 @@ export interface UploadResult {
 
 export interface UploadOptions {
   force?: boolean;
+  nested?: boolean;
 }
 
 export async function upload(
   options: UploadOptions = {},
 ): Promise<UploadResult> {
-  p.intro(pc.bgCyan(pc.black(" bunnyup upload ")));
+  if (!options.nested) {
+    p.intro(pc.bgCyan(pc.black(" bunnyup upload ")));
+  }
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
@@ -125,7 +128,8 @@ export async function upload(
 
   spinner.stop(`Uploaded ${files.length} files`);
 
-  p.outro(`${pc.green("✓")} Version ${pc.cyan(gitHash)} ready`);
+  const msg = `${pc.green("✓")} Version ${pc.cyan(gitHash)} ready`;
+  options.nested ? p.log.success(msg) : p.outro(msg);
 
   return {
     storageZone,

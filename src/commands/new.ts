@@ -68,13 +68,14 @@ export async function newProject(): Promise<void> {
   // Gather configuration
   const defaultName = await getDefaultProjectName();
 
+  p.note("Tab to accept the default value", "Tip");
+
   const config = await p.group(
     {
       name: () =>
         p.text({
           message: "Project name:",
           placeholder: defaultName,
-          defaultValue: defaultName,
           validate: (value) => {
             if (!/^[a-z0-9-]+$/i.test(value)) {
               return "Name can only contain letters, numbers, and hyphens";
@@ -88,13 +89,11 @@ export async function newProject(): Promise<void> {
         p.text({
           message: "Output folder:",
           placeholder: "dist",
-          defaultValue: "dist",
         }),
       pruneAfter: () =>
         p.text({
           message: "Prune deployments older than (days):",
           placeholder: "30",
-          defaultValue: "30",
           validate: (value) => {
             const num = parseInt(value, 10);
             if (isNaN(num) || num <= 0) {
@@ -172,7 +171,7 @@ export async function newProject(): Promise<void> {
 
   // Run initial deploy (skip prune since there's nothing to prune yet)
   // Use --force because .bunnyup.json makes the repo dirty
-  await deploy({ noPrune: true, force: true });
+  await deploy({ noPrune: true, force: true, nested: true });
 
   // Show dashboard link
   const dashboardUrl = `https://dash.bunny.net/cdn/${pullZone.Id}`;
@@ -196,8 +195,8 @@ export async function newProject(): Promise<void> {
         await Bun.write(workflowPath, workflowContent);
         p.log.success(`Created ${pc.dim(".github/workflows/deploy.yml")}`);
         p.note(
-          `Add ${pc.cyan("BUNNY_API_KEY")} to your repository secrets.`,
-          "Next step",
+          `Add ${pc.cyan("BUNNY_API_KEY")} to your repository secrets and review the example workflow.`,
+          "Setup CI",
         );
       } catch {
         p.log.warn("Could not create workflow file.");
@@ -208,6 +207,11 @@ export async function newProject(): Promise<void> {
       );
     }
   }
+
+  p.note(
+    `Your website is now live at ${pc.cyan(siteUrl)}. Please visit your Bunny.net Pull Zone dashboard to customise caching and other important settings.`,
+    "View Site",
+  );
 
   p.outro(pc.green("Setup complete!"));
 }

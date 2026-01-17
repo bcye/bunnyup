@@ -11,10 +11,13 @@ import { resolveGitRef } from "../git.ts";
 export interface ActivateOptions {
   version?: string;
   storageZoneId?: number;
+  nested?: boolean;
 }
 
 export async function activate(options: ActivateOptions = {}): Promise<string> {
-  p.intro(pc.bgCyan(pc.black(" bunnyup activate ")));
+  if (!options.nested) {
+    p.intro(pc.bgCyan(pc.black(" bunnyup activate ")));
+  }
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
@@ -71,7 +74,8 @@ export async function activate(options: ActivateOptions = {}): Promise<string> {
 
   spinner.stop("Activated");
 
-  p.outro(`${pc.green("🌐")} ${pc.cyan(siteUrl)}`);
+  const msg = `${pc.green("🌐")} ${pc.cyan(siteUrl)}`;
+  options.nested ? p.log.success(msg) : p.outro(msg);
 
   return siteUrl;
 }

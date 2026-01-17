@@ -5,6 +5,7 @@ import { listStorageZones, deleteStorageZone, getPullZone } from "../api.ts";
 
 export interface PruneOptions {
   yes?: boolean;
+  nested?: boolean;
 }
 
 export interface PruneResult {
@@ -13,7 +14,9 @@ export interface PruneResult {
 }
 
 export async function prune(options: PruneOptions = {}): Promise<PruneResult> {
-  p.intro(pc.bgCyan(pc.black(" bunnyup prune ")));
+  if (!options.nested) {
+    p.intro(pc.bgCyan(pc.black(" bunnyup prune ")));
+  }
 
   const apiKey = await requireApiKey();
   const config = await requireConfig();
@@ -49,7 +52,8 @@ export async function prune(options: PruneOptions = {}): Promise<PruneResult> {
   spinner.stop(`Found ${zonesToPrune.length} old deployment(s)`);
 
   if (zonesToPrune.length === 0) {
-    p.outro("Nothing to prune");
+    const msg = "Nothing to prune";
+    options.nested ? p.log.info(msg) : p.outro(msg);
     return { deleted: 0, skipped: 0 };
   }
 
@@ -89,7 +93,8 @@ export async function prune(options: PruneOptions = {}): Promise<PruneResult> {
 
   spinner.stop(`Deleted ${deleted} deployment(s)`);
 
-  p.outro(pc.green("✓") + " Prune complete");
+  const msg = pc.green("✓") + " Prune complete";
+  options.nested ? p.log.success(msg) : p.outro(msg);
 
   return { deleted, skipped: zonesToPrune.length - deleted };
 }
