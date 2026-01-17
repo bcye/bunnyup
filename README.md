@@ -1,3 +1,5 @@
+**NOTE: THIS CLI IS WIP AND NOT YET PUBLISHED TO NPM**
+
 # bunnyup
 
 CLI tool for deploying static sites to [Bunny.net](https://bunny.net) CDN.
