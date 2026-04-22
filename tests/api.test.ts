@@ -4,6 +4,7 @@ import {
   createPullZone,
   createStorageZone,
   listStorageZones,
+  listFiles,
   validateApiKey,
   BunnyApiError,
 } from "../src/api.ts";
@@ -151,6 +152,86 @@ describe("validateApiKey", () => {
 
     const result = await validateApiKey("bad-key");
     expect(result).toBe(false);
+  });
+});
+
+describe("listFiles", () => {
+  test("GETs the storage zone root with AccessKey", async () => {
+    let capturedUrl = "";
+    let capturedMethod = "";
+    let capturedAccessKey: string | null = "";
+
+    mockFetch((url, init) => {
+      capturedUrl = url;
+      capturedMethod = init?.method ?? "";
+      const headers = new Headers(init?.headers);
+      capturedAccessKey = headers.get("AccessKey");
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    const result = await listFiles("my-zone", "storage-pw");
+    expect(capturedMethod).toBe("GET");
+    expect(capturedUrl).toBe("https://storage.bunnycdn.com/my-zone/");
+    expect(capturedAccessKey).toBe("storage-pw");
+    expect(result).toEqual([]);
+  });
+
+  test("returns parsed file entries", async () => {
+    const mockFiles = [
+      {
+        Guid: "abc",
+        StorageZoneName: "my-zone",
+        Path: "/my-zone/",
+        ObjectName: "index.html",
+        Length: 1234,
+        LastChanged: "2026-01-01T00:00:00",
+        IsDirectory: false,
+        ContentType: "text/html",
+      },
+    ];
+
+    mockFetch(() =>
+      new Response(JSON.stringify(mockFiles), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+
+    const result = await listFiles("my-zone", "storage-pw");
+    expect(result).toHaveLength(1);
+    expect(result[0]?.ObjectName).toBe("index.html");
+    expect(result[0]?.IsDirectory).toBe(false);
+  });
+
+  test("normalizes subpath to a trailing slash", async () => {
+    let capturedUrl = "";
+    mockFetch((url) => {
+      capturedUrl = url;
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    await listFiles("my-zone", "pw", "/assets/");
+    expect(capturedUrl).toBe("https://storage.bunnycdn.com/my-zone/assets/");
+  });
+
+  test("throws BunnyApiError with status on 401", async () => {
+    mockFetch(() => new Response("Unauthorized", { status: 401 }));
+
+    try {
+      await listFiles("my-zone", "bad-pw");
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error).toBeInstanceOf(BunnyApiError);
+      if (error instanceof BunnyApiError) {
+        expect(error.status).toBe(401);
+      }
+    }
   });
 });
 

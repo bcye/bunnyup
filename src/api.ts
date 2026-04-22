@@ -177,6 +177,44 @@ export async function findStorageZoneByName(
 
 const STORAGE_BASE = "https://storage.bunnycdn.com";
 
+export interface StorageFile {
+  Guid: string;
+  StorageZoneName: string;
+  Path: string;
+  ObjectName: string;
+  Length: number;
+  LastChanged: string;
+  IsDirectory: boolean;
+  ContentType: string;
+}
+
+export async function listFiles(
+  storageZoneName: string,
+  password: string,
+  path = "",
+): Promise<StorageFile[]> {
+  const suffix = path ? `${path.replace(/^\/|\/$/g, "")}/` : "";
+  const url = `${STORAGE_BASE}/${storageZoneName}/${suffix}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      AccessKey: password,
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new BunnyApiError(
+      `List failed: ${response.status} ${response.statusText}`,
+      response.status,
+      text,
+    );
+  }
+
+  return response.json() as Promise<StorageFile[]>;
+}
+
 export async function uploadFile(
   storageZoneName: string,
   password: string,

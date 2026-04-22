@@ -6,9 +6,31 @@ import {
   createStorageZone,
   uploadFile,
   findStorageZoneByName,
+  listFiles,
+  BunnyApiError,
   type StorageZone,
 } from "../api.ts";
 import { getGitHash, isGitRepo, hasUncommittedChanges } from "../git.ts";
+import { sleep } from "bun";
+
+const STORAGE_READY_TIMEOUT_MS = 60_000;
+const STORAGE_READY_POLL_MS = 500;
+
+async function waitForStorageZoneReady(zone: StorageZone): Promise<void> {
+  const deadline = Date.now() + STORAGE_READY_TIMEOUT_MS;
+  while (true) {
+    try {
+      await listFiles(zone.Name, zone.Password);
+      return;
+    } catch (err) {
+      const retryable =
+        err instanceof BunnyApiError &&
+        (err.status === 401 || err.status === 404);
+      if (!retryable || Date.now() >= deadline) throw err;
+      await sleep(STORAGE_READY_POLL_MS);
+    }
+  }
+}
 
 const CONCURRENT_UPLOADS = 5;
 
@@ -92,6 +114,8 @@ export async function upload(
   } else {
     spinner.start(`Creating ${pc.dim(storageZoneName)}`);
     storageZone = await createStorageZone(apiKey, storageZoneName);
+    spinner.message(`Waiting for ${pc.dim(storageZoneName)} to be ready`);
+    await waitForStorageZoneReady(storageZone);
     spinner.stop(`Created ${pc.dim(storageZoneName)}`);
   }
 
