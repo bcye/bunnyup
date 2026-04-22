@@ -62,15 +62,19 @@ export async function newProject(): Promise<void> {
   // Gather configuration
   const defaultName = await getDefaultProjectName();
 
-  p.note("Tab to accept the default value", "Tip");
+  p.note("Enter to accept the default value", "Tip");
+
+  // Empty values will be substituted with default if one is given. So validation accepts them.
 
   const config = await p.group(
     {
       name: () =>
         p.text({
           message: "Project name:",
+          defaultValue: defaultName,
           placeholder: defaultName,
           validate: (value) => {
+            if (!value) return;
             if (!/^[a-z0-9-]+$/i.test(value)) {
               return "Name can only contain letters, numbers, and hyphens";
             }
@@ -82,14 +86,17 @@ export async function newProject(): Promise<void> {
       outputFolder: () =>
         p.text({
           message: "Output folder:",
+          defaultValue: "dist",
           placeholder: "dist",
         }),
       pruneAfter: () =>
         p.text({
           message: "Prune deployments older than (days):",
+          defaultValue: "30",
           placeholder: "30",
           validate: (value) => {
-            const num = parseInt(value, 10);
+            if (!value) return;
+            const num = parseInt(value as string, 10);
             if (isNaN(num) || num <= 0) {
               return "Must be a positive number of days";
             }
