@@ -1,3 +1,7 @@
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/bunnyup)](https://npmx.dev/package/bunnyup)
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/license/bunnyup)](https://npmx.dev/package/bunnyup)
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/downloads/bunnyup)](https://npmx.dev/package/bunnyup)
+
 # bunnyup
 
 CLI tool for deploying static sites to [Bunny.net](https://bunny.net) CDN.
