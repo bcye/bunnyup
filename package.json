@@ -1,6 +1,6 @@
 {
   "name": "bunnyup",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI tool for managing sites deployed with Bunny.net",
   "type": "module",
   "bin": {
