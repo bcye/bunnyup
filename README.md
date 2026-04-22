@@ -4,6 +4,16 @@
 
 CLI tool for deploying static sites to [Bunny.net](https://bunny.net) CDN.
 
+## Concept
+
+Bunnyup simplifies the deployment of statically built sites to bunny.net. It follows the following deployment process:
+
+1. Upload files to a new storage zone *(i.e. bucket)*, identified by the git commit hash.
+2. Activate that deployment by pointing the pull zone *(i.e. CDN configuration)* at the new storage zone
+3. Prune deployments older than x days
+
+Old deployments remain available until pruned and can be rolled back to at any time via `bn activate`.
+
 ## Installation
 
 Requires [Bun](https://bun.sh) runtime.
