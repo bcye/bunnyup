@@ -19,7 +19,7 @@ import {
 import { isGitRepo } from "../git.ts";
 
 const WORKFLOW_URL =
-  "https://raw.githubusercontent.com/bcye/bunnyup/main/examples/github-deploy.yml";
+  "https://tangled.org/bruceroettgers.eu/bunnyup/raw/main/examples/github-deploy.yml";
 
 async function fetchWorkflowTemplate(): Promise<string | null> {
   try {
