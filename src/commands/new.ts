@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import pc from "picocolors";
 import {
+  addOrUpdateEdgeRule,
   checkPullZoneAvailability,
   createPullZone,
   createStorageZone,
@@ -149,6 +150,34 @@ export async function newProject(): Promise<void> {
   // Create pull zone
   spinner.start("Creating pull zone...");
   const pullZone = await createPullZone(apiKey, config.name, storageZone.Id);
+
+  // Override browser cache setting to immutable for known framework, hashed, assets
+  await addOrUpdateEdgeRule(apiKey, pullZone.Id, {
+    Guid: null,
+    ActionType: 25,
+    ActionParameter1: "public, max-age=31536000, immutable",
+    ActionParameter2: "",
+    ActionParameter3: "",
+    Triggers: [
+      {
+        Type: 0,
+        PatternMatches: [
+          "*/_next/static/*",
+          "*/_astro/*",
+          "*/_app/immutable/*",
+          "*/_nuxt/*",
+        ],
+        PatternMatchingType: 0,
+        Parameter1: "",
+      },
+    ],
+    ExtraActions: [],
+    TriggerMatchingType: 0,
+    Description: "",
+    Enabled: true,
+    OrderIndex: 0,
+    ReadOnly: false,
+  });
   spinner.stop("Pull zone created");
 
   // Save configuration

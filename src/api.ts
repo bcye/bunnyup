@@ -1,10 +1,38 @@
 const API_BASE = "https://api.bunny.net";
 
+export enum PullZoneTier {
+  Premium = 0,
+  Volume = 1,
+}
+
+export enum PullZoneOrigin {
+  StorageZone = 2,
+}
+
 export interface PullZone {
   Id: number;
   Name: string;
   StorageZoneId: number;
   Hostnames: Array<{ Value: string }>;
+  Type: PullZoneTier;
+  OriginType: PullZoneOrigin;
+  OriginHostHeader: string | null;
+  OriginUrl: string | null;
+  EnableGeoZoneEU: boolean;
+  EnableGeoZoneASIA: boolean;
+  EnableGeoZoneUS: boolean;
+  EnableGeoZoneAF: boolean;
+  EnableGeoZoneSA: boolean;
+  EnableSmartCache: boolean;
+  /**
+   * In seconds. -1 respects the origin's Cache-Control header.
+   */
+  CacheControlMaxAgeOverride: number;
+  /**
+   * In seconds. -1 respects the origin's Cache-Control header.
+   */
+  CacheControlPublicMaxAgeOverride: number;
+  EdgeRules: any[];
 }
 
 export interface StorageZone {
@@ -93,7 +121,23 @@ export async function createPullZone(
     EnableGeoZoneUS: true,
     EnableGeoZoneAF: true,
     EnableGeoZoneSA: true,
+    EnableSmartCache: true,
+    CacheControlMaxAgeOverride: -1,
+    CacheControlPublicMaxAgeOverride: 3600,
   });
+}
+
+export async function addOrUpdateEdgeRule(
+  apiKey: string,
+  pullZoneId: number,
+  rule: PullZone["EdgeRules"][number],
+): Promise<void> {
+  return request<void>(
+    apiKey,
+    "POST",
+    `/pullzone/${pullZoneId}/edgerules/addOrUpdate`,
+    rule,
+  );
 }
 
 export async function getPullZone(
