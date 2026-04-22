@@ -6,7 +6,7 @@ _Note: This CLI is in beta and I am using it on personal projects. Further CDN c
 
 ## Installation
 
-Requires [Bun](https://bun.sh) runtime.
+Requires the [Bun](https://bun.sh) runtime installed. Installing & running using npm, pnpm, etc. will fail!
 
 ```bash
 bun add -g bunnyup
@@ -21,7 +21,10 @@ bn login
 # 2. Set up your project
 bn new
 
-# 3. Build and deploy
+# 3. Commit Files (bn new creates a config file, bn deploy expects a clean repository)
+git add . && git commit -m "setup bunnyup"
+
+# 4. Build and deploy
 npm run build && bn deploy
 ```
 
@@ -41,14 +44,14 @@ You may want to visit the Bunny.net dashboard after running `bn new` to make any
 
 ## Commands
 
-| Command                 | Description                              |
-| ----------------------- | ---------------------------------------- |
-| `bn login`              | Save your Bunny.net API key              |
-| `bn new`                | Configure a new site                     |
-| `bn deploy`             | Upload → activate → prune                |
-| `bn upload`             | Upload files to a new version            |
-| `bn activate [version]` | Switch to a git ref/hash (default: HEAD) |
-| `bn prune`              | Delete old deployments                   |
+| Command                 | Description                                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `bn login`              | Save your Bunny.net API key (this is stored securely in your OS Keychain via [Bun.secrets](https://bun.com/docs/runtime/secrets)) |
+| `bn new`                | Configure a new site                                                                                                              |
+| `bn deploy`             | Upload → activate → prune                                                                                                         |
+| `bn upload`             | Upload files to a new version                                                                                                     |
+| `bn activate [version]` | Switch to a git ref/hash (default: HEAD)                                                                                          |
+| `bn prune`              | Delete old deployments                                                                                                            |
 
 ### Options
 
