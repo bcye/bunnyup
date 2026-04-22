@@ -4,6 +4,8 @@ CLI tool for deploying static sites to [Bunny.net](https://bunny.net) CDN.
 
 _Note: This CLI is in beta and I am using it on personal projects. Further CDN configuration is up to you, by default all assets are cached except html, json, xml -- this should be fine for modern frameworks._
 
+_Note: This tool is not affiliated with bunny.net_
+
 ## Installation
 
 Requires the [Bun](https://bun.sh) runtime installed. Installing & running using npm, pnpm, etc. will fail!
