@@ -1,11 +1,11 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { requireApiKey, requireConfig } from "../config.ts";
 import {
+  getPullZone,
   listStorageZones,
   updatePullZoneStorageZone,
-  getPullZone,
 } from "../api.ts";
+import { requireApiKey, requireConfig } from "../config.ts";
 import { resolveGitRef } from "../git.ts";
 
 export interface ActivateOptions {

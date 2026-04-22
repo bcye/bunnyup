@@ -6,13 +6,15 @@ import { upload } from "./commands/upload.ts";
 import { activate } from "./commands/activate.ts";
 import { deploy } from "./commands/deploy.ts";
 import { prune } from "./commands/prune.ts";
+import pc from "picocolors";
+import packageJson from "../package.json";
 
 const program = new Command();
 
 program
   .name("bunnyup")
   .description("CLI tool for deploying sites with Bunny.net")
-  .version("0.1.0");
+  .version(packageJson.version);
 
 program
   .command("login")
@@ -64,4 +66,13 @@ program
     await prune({ yes: opts.yes });
   });
 
-program.parse();
+program.parseAsync().catch((err) => {
+  process.on("exit", () => {
+    process.stdout.write("\n");
+    console.error(pc.dim("─".repeat(10)));
+    console.error(pc.bold("Debug info") + pc.dim(" — please open an issue if this looks like a bug:"));
+    console.error(pc.dim("https://github.com/<you>/bunnyup/issues/new\n"));
+    console.error(err instanceof Error ? (err.stack ?? err.message) : err);
+  });
+  process.exit(1);
+});

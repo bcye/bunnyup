@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { getApiKey, setApiKey } from "../config.ts";
 import { validateApiKey } from "../api.ts";
+import { getApiKey, setApiKey } from "../config.ts";
 
 export async function login(): Promise<void> {
   p.intro(pc.bgCyan(pc.black(" bunnyup login ")));

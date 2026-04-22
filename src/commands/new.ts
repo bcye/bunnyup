@@ -1,21 +1,21 @@
 import * as p from "@clack/prompts";
-import pc from "picocolors";
-import { join } from "path";
 import { mkdir } from "node:fs/promises";
-import {
-  requireApiKey,
-  getDefaultProjectName,
-  readConfig,
-  writeConfig,
-  type ProjectConfig,
-} from "../config.ts";
+import { join } from "node:path";
+import pc from "picocolors";
 import {
   checkPullZoneAvailability,
   createPullZone,
   createStorageZone,
 } from "../api.ts";
-import { deploy } from "./deploy.ts";
-import { isGitRepo, hasUncommittedChanges } from "../git.ts";
+import {
+  CONFIG_FILE,
+  getDefaultProjectName,
+  readConfig,
+  requireApiKey,
+  writeConfig,
+  type ProjectConfig,
+} from "../config.ts";
+import { isGitRepo } from "../git.ts";
 
 const WORKFLOW_URL =
   "https://raw.githubusercontent.com/bcye/bunnyup/main/examples/github-deploy.yml";
@@ -35,16 +35,9 @@ async function fetchWorkflowTemplate(): Promise<string | null> {
 export async function newProject(): Promise<void> {
   p.intro(pc.bgCyan(pc.black(" bunnyup new ")));
 
-  // Check git repo is clean
+  // Check git repo
   if (!(await isGitRepo())) {
     p.cancel("Not a git repository. bunnyup requires git for versioning.");
-    process.exit(1);
-  }
-
-  if (await hasUncommittedChanges()) {
-    p.cancel(
-      "Repository has uncommitted changes. Commit or stash changes before running 'bunnyup new'.",
-    );
     process.exit(1);
   }
 
@@ -139,7 +132,7 @@ export async function newProject(): Promise<void> {
   );
 
   const shouldCreate = await p.confirm({
-    message: "Create and deploy this site now?",
+    message: "Create this site?",
     initialValue: true,
   });
 
@@ -167,11 +160,7 @@ export async function newProject(): Promise<void> {
   };
 
   await writeConfig(projectConfig);
-  p.log.success("Configuration saved to .bunnyup.json");
-
-  // Run initial deploy (skip prune since there's nothing to prune yet)
-  // Use --force because .bunnyup.json makes the repo dirty
-  await deploy({ noPrune: true, force: true, nested: true });
+  p.log.success(`Configuration saved to ${CONFIG_FILE}`);
 
   // Show dashboard link
   const dashboardUrl = `https://dash.bunny.net/cdn/${pullZone.Id}`;
@@ -209,8 +198,14 @@ export async function newProject(): Promise<void> {
   }
 
   p.note(
-    `Your website is now live at ${pc.cyan(siteUrl)}. Please visit your Bunny.net Pull Zone dashboard to customise caching and other important settings.`,
-    "View Site",
+    [
+      "Build your project, commit the new configuration file and then deploy with:",
+      "",
+      `  ${pc.cyan("bunnyup deploy")}`,
+      "",
+      `Your site will be live at ${pc.cyan(siteUrl)}. Please visit your Bunny.net Pull Zone dashboard to customise caching and other important settings.`,
+    ].join("\n"),
+    "Next Steps",
   );
 
   p.outro(pc.green("Setup complete!"));
