@@ -12,10 +12,11 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
+      # Install and build your project, you may want to use a different package manager for this
       - run: bun install
-
       - run: bun run build
 
-      - run: bunx bunnyup deploy -y
+      # Deploy to Bunny.net, this does not require `bun install` as it is run with bunx.
+      - run: bunx bunnyup deploy
         env:
           BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
