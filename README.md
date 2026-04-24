@@ -4,11 +4,13 @@
 
 # bunnyup
 
-CLI tool for deploying static sites to [Bunny.net](https://bunny.net) CDN.
+CLI tool for deploying static sites to [Bunny.net](https://bunny.net). Go from zero to your site deployed across the globe in under a minute.
 
-_Note: This CLI is in beta and I am using it on personal projects. Further CDN configuration is up to you, by default all assets are cached except html, json, xml -- this should be fine for modern frameworks._
+- Supports one-command rollbacks (Deployments are identified by their git hash)
+- Sensible caching out of the box
+- Deploy on push via the provided GitHub Actions example
 
-_Note: This tool is not affiliated with bunny.net_
+_Note: Still in beta, I'm testing it on my own projects. Further configuration of CDN & Caching settings may still be required depending on your project. This project is not affiliated with bunny.net._
 
 ## Installation
 
@@ -33,6 +35,12 @@ git add . && git commit -m "setup bunnyup"
 # 4. Build and deploy
 npm run build && bn deploy
 ```
+
+## Why
+
+I wanted Vercel-like static site deployments with EU-based hosting.
+
+Bunny.net has the infrastructure for great static site hosting, but no good way to iteratively ship to it. This CLI is the missing piece.
 
 ## Concept
 
@@ -67,7 +75,7 @@ You may want to visit the Bunny.net dashboard after running `bn new` to make any
 
 Requires clean git working directory by default. Use `--force` to override.
 
-## Configuration
+### Configuration
 
 `bn new` creates a `bunnyup.json` file:
 
@@ -80,12 +88,15 @@ Requires clean git working directory by default. Use `--force` to override.
 }
 ```
 
-- `pruneAfter` is the number of days after which old deployments are deleted
+- `pruneAfter` is the number of days after which old deployments will be deleted by `bn prune`
 
-## CI/CD
+### CI/CD
 
 Set the `BUNNY_API_KEY` environment variable. See `examples/github-deploy.yml` for a GitHub Actions example.
 
-## API Key
+## Roadmap
 
-Get your API key from: https://dash.bunny.net/account/api-key
+- [ ] Tailor setup (i.e. caching) to framework in use
+- [ ] Support preview deployments
+
+Please open an issue if you want to help work on these.
