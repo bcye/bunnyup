@@ -94,6 +94,88 @@ Requires clean git working directory by default. Use `--force` to override.
 
 Set the `BUNNY_API_KEY` environment variable. See `examples/github-deploy.yml` for a GitHub Actions example.
 
+## Trying development branches / PRs
+
+You can evaluate an unreleased branch or PR without touching the `bunnyup` you've installed globally for production deploys. The trick is to **never `bun link` or `bun add -g` from the checkout** — instead, invoke the source file directly with `bun`.
+
+### One-time setup
+
+```bash
+# Clone outside any project directory you care about
+git clone https://github.com/bcye/bunnyup ~/src/bunnyup-dev
+cd ~/src/bunnyup-dev
+bun install
+```
+
+### Run a specific branch or PR
+
+```bash
+cd ~/src/bunnyup-dev
+
+# A branch
+git fetch origin <branch-name> && git checkout <branch-name>
+
+# Or a PR by number (works with the GitHub CLI)
+gh pr checkout <pr-number>
+
+# Invoke directly — no global install touched
+bun ~/src/bunnyup-dev/src/cli.ts --version
+bun ~/src/bunnyup-dev/src/cli.ts deploy
+```
+
+A throwaway shell alias makes this less verbose for the duration of your session:
+
+```bash
+alias bn-dev="bun $HOME/src/bunnyup-dev/src/cli.ts"
+bn-dev deploy
+```
+
+Your production `bn` / `bunny` commands continue to resolve to the globally-installed version — confirm with `which bn` vs. `type bn-dev`.
+
+### Test several PRs in parallel
+
+Use `git worktree` so each PR has its own folder, no checkout-juggling:
+
+```bash
+cd ~/src/bunnyup-dev
+git fetch origin pull/123/head:pr-123
+git worktree add ../bunnyup-pr-123 pr-123
+bun ../bunnyup-pr-123/src/cli.ts deploy
+# When done:
+git worktree remove ../bunnyup-pr-123
+```
+
+### Important: keep dev runs away from production resources
+
+The dev CLI is isolated as a binary, but **two pieces of state are shared with your production install**:
+
+1. **API key in the OS keychain.** `bn login` stores credentials under a fixed service name, so a dev branch will happily authenticate as you and can mutate real Bunny.net resources. Override it per-shell with a scoped or test-account key:
+   ```bash
+   export BUNNY_API_KEY=<test-account-key>   # takes precedence over the keychain
+   bn-dev deploy
+   ```
+2. **`bunnyup.json` in the current directory.** Whichever folder you `cd` into decides which pull zone the dev CLI talks to. Always test from a **separate sandbox project** with its own `bunnyup.json` pointing at a dedicated test pull/storage zone — don't run an unverified `bn-dev deploy` from your production site folder.
+
+A safe smoke-test directory looks like:
+
+```bash
+mkdir ~/bunnyup-sandbox && cd ~/bunnyup-sandbox
+export BUNNY_API_KEY=<test-account-key>
+bn-dev login        # optional; env var already covers auth
+bn-dev new          # creates an isolated bunnyup.json + test zone
+echo "<h1>hi</h1>" > dist/index.html
+bn-dev deploy
+```
+
+### Run the test suite
+
+```bash
+cd ~/src/bunnyup-dev
+bun install
+bun test
+bun run typecheck
+```
+
 ## Roadmap
 
 - [ ] Tailor setup (i.e. caching) to framework in use
