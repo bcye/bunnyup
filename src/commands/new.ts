@@ -1,6 +1,4 @@
 import * as p from "@clack/prompts";
-import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import pc from "picocolors";
 import {
   addOrUpdateEdgeRule,
@@ -17,21 +15,7 @@ import {
   type ProjectConfig,
 } from "../config.ts";
 import { isGitRepo } from "../git.ts";
-
-const WORKFLOW_URL =
-  "https://tangled.org/bruceroettgers.eu/bunnyup/raw/main/examples/github-deploy.yml";
-
-async function fetchWorkflowTemplate(): Promise<string | null> {
-  try {
-    const response = await fetch(WORKFLOW_URL);
-    if (response.ok) {
-      return await response.text();
-    }
-  } catch {
-    // Fall through
-  }
-  return null;
-}
+import { ci } from "./ci.ts";
 
 export async function newProject(): Promise<void> {
   p.intro(pc.bgCyan(pc.black(" bunnyup new ")));
@@ -202,47 +186,27 @@ export async function newProject(): Promise<void> {
   const dashboardUrl = `https://dash.bunny.net/cdn/${pullZone.Id}`;
   p.log.info(`Dashboard: ${pc.dim(dashboardUrl)}`);
 
-  // Offer to create GitHub workflow
-  const createWorkflow = await p.confirm({
-    message: "Create example GitHub Actions workflow?",
-    initialValue: true,
-  });
-
-  if (!p.isCancel(createWorkflow) && createWorkflow) {
-    const workflowContent = await fetchWorkflowTemplate();
-
-    if (workflowContent) {
-      const workflowDir = join(process.cwd(), ".github", "workflows");
-      const workflowPath = join(workflowDir, "deploy.yml");
-
-      try {
-        await mkdir(workflowDir, { recursive: true });
-        await Bun.write(workflowPath, workflowContent);
-        p.log.success(`Created ${pc.dim(".github/workflows/deploy.yml")}`);
-        p.note(
-          `Add ${pc.cyan("BUNNY_API_KEY")} to your repository secrets and review the example workflow.`,
-          "Setup CI",
-        );
-      } catch {
-        p.log.warn("Could not create workflow file.");
-      }
-    } else {
-      p.log.warn(
-        "Could not fetch workflow template. See https://github.com/bcye/bunnyup/tree/main/examples",
-      );
-    }
-  }
-
   p.note(
     [
       "Build your project, commit the new configuration file and then deploy with:",
       "",
-      `  ${pc.cyan("bunnyup deploy")}`,
+      `  ${pc.cyan("bn deploy")}`,
       "",
       `Your site will be live at ${pc.cyan(siteUrl)}. Please visit your Bunny.net Pull Zone dashboard to customise caching and other important settings.`,
     ].join("\n"),
     "Next Steps",
   );
 
+  const setupCi = await p.confirm({
+    message: "Set up a GitHub Actions workflow to deploy on push?",
+    initialValue: true,
+  });
+
+  if (!p.isCancel(setupCi) && setupCi) {
+    await ci();
+    return;
+  }
+
+  p.log.info(`You can run ${pc.cyan("bn ci")} later to set this up.`);
   p.outro(pc.green("Setup complete!"));
 }
