@@ -33,6 +33,7 @@ async function waitForStorageZoneReady(zone: StorageZone): Promise<void> {
 }
 
 const CONCURRENT_UPLOADS = 5;
+const FRESH_BUILD_THRESHOLD_MS = 60_000;
 
 export interface UploadResult {
   storageZone: StorageZone;
@@ -91,6 +92,25 @@ export async function upload(
   if (files.length === 0) {
     p.cancel(`Output folder "${folder}" is empty. Build your project first.`);
     process.exit(1);
+  }
+
+  // Warn if build looks stale
+  let mostRecentMtime = 0;
+  for (const relativePath of files) {
+    const mtime = Bun.file(join(folderPath, relativePath)).lastModified;
+    if (mtime > mostRecentMtime) mostRecentMtime = mtime;
+  }
+  if (Date.now() - mostRecentMtime > FRESH_BUILD_THRESHOLD_MS) {
+    if (options.force) {
+      p.log.warn(
+        `Output folder "${folder}" hasn't been modified recently (--force)`,
+      );
+    } else {
+      p.cancel(
+        `Output folder "${folder}" hasn't been modified in the last minute. Rebuild or use --force to upload anyway.`,
+      );
+      process.exit(1);
+    }
   }
 
   // Get git hash
