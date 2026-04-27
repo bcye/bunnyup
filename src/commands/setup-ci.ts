@@ -4,7 +4,7 @@ import { join } from "node:path";
 import pc from "picocolors";
 import { getCurrentBranch, getGitHubRepo, isGitRepo } from "../git.ts";
 
-type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
+export type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
 
 interface PackageManagerConfig {
   label: string;
@@ -62,7 +62,7 @@ const PACKAGE_MANAGERS: Record<PackageManager, PackageManagerConfig> = {
   },
 };
 
-async function detectPackageManager(
+export async function detectPackageManager(
   cwd: string = process.cwd(),
 ): Promise<PackageManager | null> {
   for (const [pm, cfg] of Object.entries(PACKAGE_MANAGERS) as [
@@ -78,7 +78,7 @@ async function detectPackageManager(
   return null;
 }
 
-function buildWorkflow(opts: {
+export function buildWorkflow(opts: {
   packageManager: PackageManager;
   buildCommand: string;
   branch: string;
@@ -115,8 +115,8 @@ ${cfg.setupSteps}
 `;
 }
 
-export async function ci(): Promise<void> {
-  p.intro(pc.bgCyan(pc.black(" bunnyup ci ")));
+export async function setupCi(): Promise<void> {
+  p.intro(pc.bgCyan(pc.black(" bunnyup setup-ci ")));
 
   if (!(await isGitRepo())) {
     p.cancel("Not a git repository. A git repo is required to set up CI.");

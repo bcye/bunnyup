@@ -62,7 +62,7 @@ You may want to visit the Bunny.net dashboard after running `bn new` to make any
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `bn login`              | Save your Bunny.net API key (this is stored securely in your OS Keychain via [Bun.secrets](https://bun.com/docs/runtime/secrets)) |
 | `bn new`                | Configure a new site                                                                                                              |
-| `bn ci`                 | Generate a GitHub Actions workflow that deploys on push                                                                           |
+| `bn setup-ci`           | Generate a CI workflow (GitHub Actions today) that deploys on push                                                                |
 | `bn deploy`             | Upload → activate → prune                                                                                                         |
 | `bn upload`             | Upload files to a new version                                                                                                     |
 | `bn activate [version]` | Switch to a git ref/hash (default: HEAD)                                                                                          |
@@ -93,7 +93,7 @@ Requires clean git working directory by default. Use `--force` to override.
 
 ### CI/CD
 
-Run `bn ci` to generate a GitHub Actions workflow tailored to your package manager and build command. You'll be linked to your repo's secrets page to add the `BUNNY_API_KEY` secret. See `examples/github-deploy.yml` for a hand-written reference.
+Run `bn setup-ci` to generate a CI workflow tailored to your package manager and build command. You'll be linked to your repo's secrets page to add the `BUNNY_API_KEY` secret. GitHub Actions is the only provider for now; more may be added later. See `examples/github-deploy.yml` for a hand-written reference.
 
 ## Roadmap
 

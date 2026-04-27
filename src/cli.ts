@@ -6,7 +6,7 @@ import { upload } from "./commands/upload.ts";
 import { activate } from "./commands/activate.ts";
 import { deploy } from "./commands/deploy.ts";
 import { prune } from "./commands/prune.ts";
-import { ci } from "./commands/ci.ts";
+import { setupCi } from "./commands/setup-ci.ts";
 import pc from "picocolors";
 import packageJson from "../package.json";
 
@@ -68,10 +68,10 @@ program
   });
 
 program
-  .command("ci")
-  .description("Generate a GitHub Actions workflow for deploys")
+  .command("setup-ci")
+  .description("Generate a CI workflow that deploys on push")
   .action(async () => {
-    await ci();
+    await setupCi();
   });
 
 program.parseAsync().catch((err) => {

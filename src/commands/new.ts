@@ -15,7 +15,7 @@ import {
   type ProjectConfig,
 } from "../config.ts";
 import { isGitRepo } from "../git.ts";
-import { ci } from "./ci.ts";
+import { setupCi } from "./setup-ci.ts";
 
 export async function newProject(): Promise<void> {
   p.intro(pc.bgCyan(pc.black(" bunnyup new ")));
@@ -197,16 +197,16 @@ export async function newProject(): Promise<void> {
     "Next Steps",
   );
 
-  const setupCi = await p.confirm({
+  const wantsCi = await p.confirm({
     message: "Set up a GitHub Actions workflow to deploy on push?",
     initialValue: true,
   });
 
-  if (!p.isCancel(setupCi) && setupCi) {
-    await ci();
+  if (!p.isCancel(wantsCi) && wantsCi) {
+    await setupCi();
     return;
   }
 
-  p.log.info(`You can run ${pc.cyan("bn ci")} later to set this up.`);
+  p.log.info(`You can run ${pc.cyan("bn setup-ci")} later to set this up.`);
   p.outro(pc.green("Setup complete!"));
 }
