@@ -73,7 +73,6 @@ You may want to visit the Bunny.net dashboard after running `bn new` to make any
 - `--no-prune` - Skip pruning old versions (deploy)
 - `-f, --force` - Upload with uncommitted git changes (upload, deploy)
 - `-y, --yes` - Skip confirmation prompts (prune, cleanup)
-- `--keep-config` - Keep the local `bunnyup.json` after cleanup (cleanup)
 
 Requires clean git working directory by default. Use `--force` to override.
 

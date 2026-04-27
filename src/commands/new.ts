@@ -75,7 +75,7 @@ export async function newProject(): Promise<void> {
     }
 
     if (shouldCleanup) {
-      await cleanup({ nested: true, keepConfig: true });
+      await cleanup({ nested: true });
     }
   }
 

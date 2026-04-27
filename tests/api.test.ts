@@ -3,6 +3,8 @@ import {
   checkPullZoneAvailability,
   createPullZone,
   createStorageZone,
+  deletePullZone,
+  deleteStorageZone,
   listStorageZones,
   listFiles,
   validateApiKey,
@@ -230,6 +232,74 @@ describe("listFiles", () => {
       expect(error).toBeInstanceOf(BunnyApiError);
       if (error instanceof BunnyApiError) {
         expect(error.status).toBe(401);
+      }
+    }
+  });
+});
+
+describe("deletePullZone", () => {
+  test("DELETEs the pull zone by id", async () => {
+    let capturedUrl = "";
+    let capturedMethod = "";
+    let capturedAccessKey: string | null = "";
+
+    mockFetch((url, init) => {
+      capturedUrl = url;
+      capturedMethod = init?.method ?? "";
+      const headers = new Headers(init?.headers);
+      capturedAccessKey = headers.get("AccessKey");
+      return new Response(null, { status: 204 });
+    });
+
+    await deletePullZone(TEST_API_KEY, 123);
+    expect(capturedMethod).toBe("DELETE");
+    expect(capturedUrl).toBe("https://api.bunny.net/pullzone/123");
+    expect(capturedAccessKey).toBe(TEST_API_KEY);
+  });
+
+  test("throws BunnyApiError with status on 404", async () => {
+    mockFetch(() => new Response("Not Found", { status: 404 }));
+
+    try {
+      await deletePullZone(TEST_API_KEY, 999);
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error).toBeInstanceOf(BunnyApiError);
+      if (error instanceof BunnyApiError) {
+        expect(error.status).toBe(404);
+      }
+    }
+  });
+});
+
+describe("deleteStorageZone", () => {
+  test("DELETEs the storage zone without cascading to linked pull zones", async () => {
+    let capturedUrl = "";
+    let capturedMethod = "";
+
+    mockFetch((url, init) => {
+      capturedUrl = url;
+      capturedMethod = init?.method ?? "";
+      return new Response(null, { status: 204 });
+    });
+
+    await deleteStorageZone(TEST_API_KEY, 456);
+    expect(capturedMethod).toBe("DELETE");
+    expect(capturedUrl).toBe(
+      "https://api.bunny.net/storagezone/456?deleteLinkedPullZones=false",
+    );
+  });
+
+  test("throws BunnyApiError with status on 404", async () => {
+    mockFetch(() => new Response("Not Found", { status: 404 }));
+
+    try {
+      await deleteStorageZone(TEST_API_KEY, 999);
+      expect(true).toBe(false);
+    } catch (error) {
+      expect(error).toBeInstanceOf(BunnyApiError);
+      if (error instanceof BunnyApiError) {
+        expect(error.status).toBe(404);
       }
     }
   });

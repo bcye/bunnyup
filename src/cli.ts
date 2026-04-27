@@ -7,7 +7,6 @@ import { activate } from "./commands/activate.ts";
 import { deploy } from "./commands/deploy.ts";
 import { prune } from "./commands/prune.ts";
 import { cleanup } from "./commands/cleanup.ts";
-import { CONFIG_FILE } from "./config.ts";
 import pc from "picocolors";
 import packageJson from "../package.json";
 
@@ -74,9 +73,8 @@ program
     "Delete the pull zone and all storage zones for this project on Bunny.net",
   )
   .option("-y, --yes", "Skip confirmation prompt")
-  .option("--keep-config", `Keep the local ${CONFIG_FILE} file`)
-  .action(async (opts: { yes?: boolean; keepConfig?: boolean }) => {
-    await cleanup({ yes: opts.yes, keepConfig: opts.keepConfig });
+  .action(async (opts: { yes?: boolean }) => {
+    await cleanup({ yes: opts.yes });
   });
 
 program.parseAsync().catch((err) => {

@@ -17,7 +17,6 @@ import {
 export interface CleanupOptions {
   yes?: boolean;
   nested?: boolean;
-  keepConfig?: boolean;
 }
 
 export interface CleanupResult {
@@ -118,14 +117,12 @@ export async function cleanup(
     spinner.stop(`Deleted ${deleted} storage zone(s)`);
   }
 
-  // Remove local config unless caller wants to keep it
-  if (!options.keepConfig) {
-    try {
-      await unlink(getConfigPath());
-      p.log.success(`Removed ${CONFIG_FILE}`);
-    } catch {
-      // Already gone or unreadable; ignore
-    }
+  // Remove local config
+  try {
+    await unlink(getConfigPath());
+    p.log.success(`Removed ${CONFIG_FILE}`);
+  } catch {
+    // Already gone or unreadable; ignore
   }
 
   const summary = `${pc.green("✓")} Cleanup complete`;
