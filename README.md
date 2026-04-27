@@ -66,12 +66,14 @@ You may want to visit the Bunny.net dashboard after running `bn new` to make any
 | `bn upload`             | Upload files to a new version                                                                                                     |
 | `bn activate [version]` | Switch to a git ref/hash (default: HEAD)                                                                                          |
 | `bn prune`              | Delete old deployments                                                                                                            |
+| `bn cleanup`            | Delete the pull zone and all storage zones for this project on Bunny.net                                                          |
 
 ### Options
 
 - `--no-prune` - Skip pruning old versions (deploy)
 - `-f, --force` - Upload with uncommitted git changes (upload, deploy)
-- `-y, --yes` - Skip confirmation prompts (prune)
+- `-y, --yes` - Skip confirmation prompts (prune, cleanup)
+- `--keep-config` - Keep the local `bunnyup.json` after cleanup (cleanup)
 
 Requires clean git working directory by default. Use `--force` to override.
 
