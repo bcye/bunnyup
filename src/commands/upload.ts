@@ -112,7 +112,7 @@ export async function upload(
       );
     } else {
       p.cancel(
-        `Output folder "${folder}" hasn't been modified in the last minute. Rebuild or use --force to upload anyway.`,
+        `Aborting: Output folder "${folder}" hasn't been modified in the last minute, the build might be stale. Rebuild or use --force to upload anyway.`,
       );
       process.exit(1);
     }
