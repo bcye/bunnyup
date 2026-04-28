@@ -35,6 +35,15 @@ async function waitForStorageZoneReady(zone: StorageZone): Promise<void> {
 const CONCURRENT_UPLOADS = 5;
 const FRESH_BUILD_THRESHOLD_MS = 60_000;
 
+export function newestMtime(folderPath: string, files: string[]): number {
+  let newest = 0;
+  for (const relativePath of files) {
+    const mtime = Bun.file(join(folderPath, relativePath)).lastModified;
+    if (mtime > newest) newest = mtime;
+  }
+  return newest;
+}
+
 export interface UploadResult {
   storageZone: StorageZone;
   fileCount: number;
@@ -95,11 +104,7 @@ export async function upload(
   }
 
   // Warn if build looks stale
-  let mostRecentMtime = 0;
-  for (const relativePath of files) {
-    const mtime = Bun.file(join(folderPath, relativePath)).lastModified;
-    if (mtime > mostRecentMtime) mostRecentMtime = mtime;
-  }
+  const mostRecentMtime = newestMtime(folderPath, files);
   if (Date.now() - mostRecentMtime > FRESH_BUILD_THRESHOLD_MS) {
     if (options.force) {
       p.log.warn(
