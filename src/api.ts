@@ -160,6 +160,13 @@ export async function updatePullZoneStorageZone(
   });
 }
 
+export async function deletePullZone(
+  apiKey: string,
+  id: number,
+): Promise<void> {
+  await request<void>(apiKey, "DELETE", `/pullzone/${id}`);
+}
+
 // ============ Storage Zone API ============
 
 export async function createStorageZone(

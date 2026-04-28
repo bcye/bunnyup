@@ -17,6 +17,7 @@ import {
   type ProjectConfig,
 } from "../config.ts";
 import { isGitRepo } from "../git.ts";
+import { cleanup } from "./cleanup.ts";
 
 const WORKFLOW_URL =
   "https://tangled.org/bruceroettgers.eu/bunnyup/raw/main/examples/github-deploy.yml";
@@ -56,6 +57,25 @@ export async function newProject(): Promise<void> {
     if (p.isCancel(shouldReconfigure) || !shouldReconfigure) {
       p.outro("Keeping existing configuration.");
       return;
+    }
+
+    // Reconfiguring will create new resources on Bunny.net. Offer to delete
+    // the existing pull zone and storage zones so they don't become orphaned.
+    p.log.warn(
+      "Reconfiguring will create a new pull zone and storage zones on Bunny.net. The existing resources will be left in place unless deleted now.",
+    );
+    const shouldCleanup = await p.confirm({
+      message: "Delete the existing project's resources first?",
+      initialValue: true,
+    });
+
+    if (p.isCancel(shouldCleanup)) {
+      p.cancel("Setup cancelled.");
+      process.exit(1);
+    }
+
+    if (shouldCleanup) {
+      await cleanup({ nested: true });
     }
   }
 
