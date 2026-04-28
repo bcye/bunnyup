@@ -87,15 +87,14 @@ export async function cleanup(
       pullZoneDeleted = true;
     } else {
       spinner.stop("Failed to delete pull zone");
-      p.log.warn(
-        err instanceof Error ? err.message : "Unknown error deleting pull zone",
-      );
+      throw err;
     }
   }
 
   // Delete storage zones
   let deleted = 0;
   let failed = 0;
+  const failures: { name: string; error: unknown }[] = [];
   if (projectZones.length > 0) {
     spinner.start(`Deleting storage zones 0/${projectZones.length}`);
     for (const zone of projectZones) {
@@ -107,7 +106,7 @@ export async function cleanup(
           deleted++;
         } else {
           failed++;
-          p.log.warn(`Failed to delete ${zone.Name}`);
+          failures.push({ name: zone.Name, error: err });
         }
       }
       spinner.message(
@@ -115,17 +114,35 @@ export async function cleanup(
       );
     }
     spinner.stop(`Deleted ${deleted} storage zone(s)`);
+
+    for (const { name, error } of failures) {
+      const detail =
+        error instanceof BunnyApiError
+          ? `${error.message}${error.body ? `\n${error.body}` : ""}`
+          : error instanceof Error
+            ? (error.stack ?? error.message)
+            : String(error);
+      p.log.error(`Failed to delete ${name}:\n${detail}`);
+    }
   }
 
-  // Remove local config
-  try {
-    await unlink(getConfigPath());
-    p.log.success(`Removed ${CONFIG_FILE}`);
-  } catch {
-    // Already gone or unreadable; ignore
+  // Remove local config only if everything succeeded — otherwise the user
+  // will want to retry against the same project
+  if (failed === 0) {
+    try {
+      await unlink(getConfigPath());
+      p.log.success(`Removed ${CONFIG_FILE}`);
+    } catch {
+      // Already gone or unreadable; ignore
+    }
+  } else {
+    p.log.warn(`Keeping ${CONFIG_FILE} so cleanup can be retried.`);
   }
 
-  const summary = `${pc.green("✓")} Cleanup complete`;
+  const summary =
+    failed === 0
+      ? `${pc.green("✓")} Cleanup complete`
+      : `${pc.yellow("!")} Cleanup finished with ${failed} failure(s)`;
   options.nested ? p.log.success(summary) : p.outro(summary);
 
   return {

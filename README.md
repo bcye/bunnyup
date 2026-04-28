@@ -66,7 +66,7 @@ You may want to visit the Bunny.net dashboard after running `bn new` to make any
 | `bn upload`             | Upload files to a new version                                                                                                     |
 | `bn activate [version]` | Switch to a git ref/hash (default: HEAD)                                                                                          |
 | `bn prune`              | Delete old deployments                                                                                                            |
-| `bn cleanup`            | Delete the pull zone and all storage zones for this project on Bunny.net                                                          |
+| `bn cleanup`            | Delete bunny.net resources                                                                                                        |
 
 ### Options
 
