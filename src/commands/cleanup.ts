@@ -29,7 +29,7 @@ export async function cleanup(
   options: CleanupOptions = {},
 ): Promise<CleanupResult> {
   if (!options.nested) {
-    p.intro(pc.bgRed(pc.white(" bunnyup cleanup ")));
+    p.intro(pc.bgYellow(pc.black(" bunnyup cleanup ")));
   }
 
   const apiKey = await requireApiKey();
