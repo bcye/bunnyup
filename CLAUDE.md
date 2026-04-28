@@ -31,6 +31,8 @@ test("hello world", () => {
 });
 ```
 
+When making changes, add or update tests where applicable to cover the new behavior, bug fix, or refactor. Place tests in `tests/` and run `bun test` to confirm they pass before committing.
+
 ## This Project: bunnyup
 
 CLI tool for deploying static sites to Bunny.net CDN.
