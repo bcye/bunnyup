@@ -4,7 +4,7 @@ import { join } from "node:path";
 import pc from "picocolors";
 import { getCurrentBranch, getGitHubRepo, isGitRepo } from "../git.ts";
 
-export type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
+type PackageManager = "bun" | "pnpm" | "yarn" | "npm";
 
 interface PackageManagerConfig {
   label: string;
@@ -78,7 +78,7 @@ export async function detectPackageManager(
   return null;
 }
 
-export function buildWorkflow(opts: {
+function buildWorkflow(opts: {
   packageManager: PackageManager;
   buildCommand: string;
   branch: string;

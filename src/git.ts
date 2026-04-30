@@ -71,17 +71,43 @@ export function parseGitHubRemote(
   return null;
 }
 
+async function getRemoteUrl(name: string): Promise<string | null> {
+  try {
+    const result = await $`git remote get-url ${name}`.quiet().text();
+    const trimmed = result.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Get the GitHub owner/repo for the `origin` remote, or null if not GitHub or unavailable
+ * Get the GitHub owner/repo for the project. Checks `origin` first, then falls
+ * back to other remotes so projects whose primary remote is non-GitHub (e.g.
+ * a GitLab origin with a GitHub mirror) still resolve. Returns null if no
+ * remote points at GitHub.
  */
 export async function getGitHubRepo(): Promise<{
   owner: string;
   repo: string;
 } | null> {
+  let remotes: string[];
   try {
-    const result = await $`git remote get-url origin`.quiet().text();
-    return parseGitHubRemote(result);
+    const result = await $`git remote`.quiet().text();
+    remotes = result.trim().split("\n").filter(Boolean);
   } catch {
     return null;
   }
+
+  const ordered = remotes.includes("origin")
+    ? ["origin", ...remotes.filter((r) => r !== "origin")]
+    : remotes;
+
+  for (const name of ordered) {
+    const url = await getRemoteUrl(name);
+    if (!url) continue;
+    const parsed = parseGitHubRemote(url);
+    if (parsed) return parsed;
+  }
+  return null;
 }
