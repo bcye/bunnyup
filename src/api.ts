@@ -122,8 +122,9 @@ export async function createPullZone(
     EnableGeoZoneAF: true,
     EnableGeoZoneSA: true,
     EnableSmartCache: true,
-    CacheControlMaxAgeOverride: -1,
-    CacheControlPublicMaxAgeOverride: 3600,
+    CacheControlMaxAgeOverride: 10800, // 3 hours
+    // means same as server, required for SmartCache to affect the browser cache
+    CacheControlPublicMaxAgeOverride: -1,
   });
 }
 

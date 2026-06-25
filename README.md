@@ -56,6 +56,16 @@ The Pull Zone the CLI creates is long-lived and only reconfigured afterwards. By
 
 You may want to visit the Bunny.net dashboard after running `bn new` to make any applicable adjustments for your setup.
 
+### Caching
+
+Caching is configured by default, oriented around framework-built static sites, with the following settings. CDN Cache is not purged in between deployments. Uncached content is served from the 15 edge storage regions.
+
+| CDN Cache  | Browser Cache                           | Assets                                                     |
+| ---------- | --------------------------------------- | ---------------------------------------------------------- |
+| not cached | not cached                              | html, json, xml                                            |
+| 3 hours    | `public, max-age=31536000, immutable`   | Framework assets (\_next, \_astro, \_nuxt, \_app/immutable) |
+| 3 hours    | 3 hours                                 | All other assets                                           |
+
 ## Commands
 
 | Command                 | Description                                                                                                                       |
@@ -97,7 +107,6 @@ Set the `BUNNY_API_KEY` environment variable. See `examples/github-deploy.yml` f
 
 ## Roadmap
 
-- [ ] Tailor setup (i.e. caching) to framework in use
 - [ ] Support preview deployments
 
 Please open an issue if you want to help work on these.

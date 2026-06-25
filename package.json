@@ -1,11 +1,11 @@
 {
   "name": "bunnyup",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CLI tool for managing sites deployed with Bunny.net",
   "type": "module",
   "bin": {
-    "bn": "./src/cli.ts",
-    "bunny": "./src/cli.ts"
+    "bn": "src/cli.ts",
+    "bunny": "src/cli.ts"
   },
   "files": [
     "src"
