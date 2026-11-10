@@ -1,0 +1,28 @@
+name: Remove preview from Bunny.net
+
+on:
+  pull_request:
+    # Runs when the pull request is merged or closed without merging
+    types: [closed]
+
+concurrency:
+  group: bunnyup-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    steps:
+      # Only bunnyup.json is needed. Check out the base branch, since the PR's merge ref
+      # may no longer exist once it is closed.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      # Deletes the preview pull zone, and its deployment unless production still serves it.
+      # Succeeds if the preview was never created or is already gone.
+      - run: bunx bunnyup preview remove pr-${{ github.event.pull_request.number }}
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}

@@ -7,6 +7,7 @@ import { activate } from "./commands/activate.ts";
 import { deploy } from "./commands/deploy.ts";
 import { prune } from "./commands/prune.ts";
 import { cleanup } from "./commands/cleanup.ts";
+import { previewDeploy, previewRemove } from "./commands/preview.ts";
 import pc from "picocolors";
 import packageJson from "../package.json";
 
@@ -70,11 +71,35 @@ program
 program
   .command("cleanup")
   .description(
-    "Delete the pull zone and all storage zones for this project on Bunny.net",
+    "Delete the pull zone, preview pull zones and all storage zones for this project on Bunny.net",
   )
   .option("-y, --yes", "Skip confirmation prompt")
   .action(async (opts: { yes?: boolean }) => {
     await cleanup({ yes: opts.yes });
+  });
+
+const preview = program
+  .command("preview")
+  .description("Manage preview deployments");
+
+preview
+  .command("deploy")
+  .description(
+    "Upload the current commit and create or update the named preview",
+  )
+  .argument("<name>", "Preview name, e.g. pr-42")
+  .option("-f, --force", "Upload even with uncommitted changes")
+  .action(async (name: string, opts: { force?: boolean }) => {
+    await previewDeploy(name, { force: opts.force });
+  });
+
+preview
+  .command("remove")
+  .alias("rm")
+  .description("Delete the named preview")
+  .argument("<name>", "Preview name, e.g. pr-42")
+  .action(async (name: string) => {
+    await previewRemove(name);
   });
 
 program.parseAsync().catch((err) => {

@@ -1,0 +1,31 @@
+name: Preview on Bunny.net
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# One preview job per pull request at a time; a newer push cancels an older run.
+# Shared with github-preview-remove.yml so closing a PR cancels an in-flight deploy.
+concurrency:
+  group: bunnyup-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks out the PR merged into its base branch, so the preview shows the result of merging
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      # Install and build your project, you may want to use a different package manager for this
+      - run: bun install
+      - run: bun run build
+
+      # Creates the preview on the first push and updates it on every later push.
+      # It is served at https://<project>-pre-pr-<number>.b-cdn.net
+      # Note: pull requests from forks don't receive repository secrets, so this step fails for them.
+      - run: bunx bunnyup preview deploy pr-${{ github.event.pull_request.number }}
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}

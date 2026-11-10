@@ -1,5 +1,12 @@
 import { test, expect, describe } from "bun:test";
-import { isDeploymentStorageZone, validateProjectName } from "../src/naming.ts";
+import {
+  isDeploymentStorageZone,
+  parsePreviewPullZoneName,
+  previewPullZoneName,
+  validatePreviewName,
+  validateProjectName,
+  validateProjectNameForPreviews,
+} from "../src/naming.ts";
 import { filterDeploymentStorageZones } from "../src/zones.ts";
 import type { StorageZone } from "../src/api.ts";
 
@@ -47,9 +54,9 @@ describe("filterDeploymentStorageZones", () => {
       zone(3, "blog-initial"),
       zone(4, "other-abc1234"),
     ];
-    expect(filterDeploymentStorageZones("blog", zones).map((z) => z.Id)).toEqual(
-      [1, 3],
-    );
+    expect(
+      filterDeploymentStorageZones("blog", zones).map((z) => z.Id),
+    ).toEqual([1, 3]);
   });
 });
 
@@ -67,5 +74,83 @@ describe("validateProjectName", () => {
   test("rejects names that are too short or too long", () => {
     expect(validateProjectName("ab")).toBeString();
     expect(validateProjectName("a".repeat(61))).toBeString();
+  });
+
+  test("rejects the reserved preview separator as a word", () => {
+    expect(validateProjectName("blog-pre-launch")).toBeString();
+    expect(validateProjectName("blog-pre")).toBeString();
+    expect(validateProjectName("pre-blog")).toBeString();
+    expect(validateProjectName("Blog-PRE")).toBeString();
+  });
+
+  test("allows the separator inside a longer word", () => {
+    expect(validateProjectName("preview-site")).toBeUndefined();
+    expect(validateProjectName("blog-prefix")).toBeUndefined();
+    expect(validateProjectName("presto")).toBeUndefined();
+  });
+});
+
+describe("validateProjectNameForPreviews", () => {
+  test("rejects legacy project names containing the reserved word", () => {
+    expect(validateProjectNameForPreviews("blog-pre")).toBeString();
+    expect(validateProjectNameForPreviews("blog")).toBeUndefined();
+  });
+});
+
+describe("validatePreviewName", () => {
+  test("accepts typical preview names", () => {
+    expect(validatePreviewName("pr-42")).toBeUndefined();
+    expect(validatePreviewName("feature-login")).toBeUndefined();
+    expect(validatePreviewName("staging")).toBeUndefined();
+  });
+
+  test("rejects uppercase, other characters and stray hyphens", () => {
+    expect(validatePreviewName("PR-42")).toBeString();
+    expect(validatePreviewName("feature/login")).toBeString();
+    expect(validatePreviewName("-pr")).toBeString();
+    expect(validatePreviewName("pr-")).toBeString();
+    expect(validatePreviewName("pr--42")).toBeString();
+    expect(validatePreviewName("")).toBeString();
+  });
+
+  test("rejects the reserved separator as a word", () => {
+    expect(validatePreviewName("pre")).toBeString();
+    expect(validatePreviewName("pre-launch")).toBeString();
+    expect(validatePreviewName("x-pre-y")).toBeString();
+    expect(validatePreviewName("prerelease")).toBeUndefined();
+  });
+
+  test("rejects names whose pull zone name would exceed a DNS label", () => {
+    const project = "a".repeat(50);
+    // `${project}-pre-` is 55 characters, leaving 8 for the preview name
+    expect(validatePreviewName("b".repeat(8), project)).toBeUndefined();
+    expect(validatePreviewName("b".repeat(9), project)).toBeString();
+  });
+});
+
+describe("previewPullZoneName / parsePreviewPullZoneName", () => {
+  test("round-trips", () => {
+    const name = previewPullZoneName("blog", "pr-42");
+    expect(name).toBe("blog-pre-pr-42");
+    expect(parsePreviewPullZoneName("blog", name)).toBe("pr-42");
+  });
+
+  test("is case-insensitive on the zone name", () => {
+    expect(parsePreviewPullZoneName("Blog", "blog-pre-pr-42")).toBe("pr-42");
+    expect(parsePreviewPullZoneName("blog", "BLOG-PRE-PR-42")).toBe("pr-42");
+  });
+
+  test("returns null for the production pull zone and unrelated zones", () => {
+    expect(parsePreviewPullZoneName("blog", "blog")).toBeNull();
+    expect(parsePreviewPullZoneName("blog", "blog-pre-")).toBeNull();
+    expect(parsePreviewPullZoneName("blog", "other-pre-pr-1")).toBeNull();
+    expect(parsePreviewPullZoneName("blog", "myblog-pre-pr-1")).toBeNull();
+  });
+
+  test("does not claim preview zones of projects whose name extends this one", () => {
+    // Previews of a project named "blog-prefix"
+    expect(parsePreviewPullZoneName("blog", "blog-prefix-pre-pr-1")).toBeNull();
+    // Previews of a legacy project named "blog-pre"
+    expect(parsePreviewPullZoneName("blog", "blog-pre-pre-pr-1")).toBeNull();
   });
 });

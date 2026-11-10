@@ -13,7 +13,10 @@ import {
   requireApiKey,
   requireConfig,
 } from "../config.ts";
-import { filterDeploymentStorageZones } from "../zones.ts";
+import {
+  filterDeploymentStorageZones,
+  listPreviewPullZones,
+} from "../zones.ts";
 
 export interface CleanupOptions {
   yes?: boolean;
@@ -22,6 +25,8 @@ export interface CleanupOptions {
 
 export interface CleanupResult {
   pullZoneDeleted: boolean;
+  previewPullZonesDeleted: number;
+  previewPullZonesFailed: number;
   storageZonesDeleted: number;
   storageZonesFailed: number;
 }
@@ -41,14 +46,25 @@ export async function cleanup(
 
   const allZones = await listStorageZones(apiKey);
   const projectZones = filterDeploymentStorageZones(config.name, allZones);
+  const previewZones = await listPreviewPullZones(
+    apiKey,
+    config.name,
+    config.pullZoneId,
+  );
 
   spinner.stop(
-    `Found pull zone and ${projectZones.length} storage zone(s)`,
+    `Found pull zone, ${previewZones.length} preview(s) and ${projectZones.length} storage zone(s)`,
   );
+
+  const resourceCount = 1 + previewZones.length + projectZones.length;
 
   // Show what will be deleted
   const lines = [
     `  ${pc.dim("Pull zone:")} ${config.name} (id ${config.pullZoneId})`,
+    ...previewZones.map(
+      ({ pullZone }) =>
+        `  ${pc.dim("Preview pull zone:")} ${pullZone.Name} (id ${pullZone.Id})`,
+    ),
     ...projectZones.map((z) => `  ${pc.dim("Storage zone:")} ${z.Name}`),
   ];
   p.log.warn(
@@ -57,7 +73,7 @@ export async function cleanup(
 
   if (!options.yes) {
     const shouldDelete = await p.confirm({
-      message: `Permanently delete ${projectZones.length + 1} resource(s)?`,
+      message: `Permanently delete ${resourceCount} resource(s)?`,
       initialValue: false,
     });
 
@@ -67,6 +83,8 @@ export async function cleanup(
       if (!options.nested) process.exit(1);
       return {
         pullZoneDeleted: false,
+        previewPullZonesDeleted: 0,
+        previewPullZonesFailed: 0,
         storageZonesDeleted: 0,
         storageZonesFailed: 0,
       };
@@ -90,6 +108,30 @@ export async function cleanup(
         err instanceof Error ? err.message : "Unknown error deleting pull zone",
       );
     }
+  }
+
+  // Delete preview pull zones
+  let previewsDeleted = 0;
+  let previewsFailed = 0;
+  if (previewZones.length > 0) {
+    spinner.start(`Deleting preview pull zones 0/${previewZones.length}`);
+    for (const { pullZone } of previewZones) {
+      try {
+        await deletePullZone(apiKey, pullZone.Id);
+        previewsDeleted++;
+      } catch (err) {
+        if (err instanceof BunnyApiError && err.status === 404) {
+          previewsDeleted++;
+        } else {
+          previewsFailed++;
+          p.log.warn(`Failed to delete ${pullZone.Name}`);
+        }
+      }
+      spinner.message(
+        `Deleting preview pull zones ${previewsDeleted + previewsFailed}/${previewZones.length}`,
+      );
+    }
+    spinner.stop(`Deleted ${previewsDeleted} preview pull zone(s)`);
   }
 
   // Delete storage zones
@@ -129,6 +171,8 @@ export async function cleanup(
 
   return {
     pullZoneDeleted,
+    previewPullZonesDeleted: previewsDeleted,
+    previewPullZonesFailed: previewsFailed,
     storageZonesDeleted: deleted,
     storageZonesFailed: failed,
   };

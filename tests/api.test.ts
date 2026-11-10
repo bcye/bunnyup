@@ -6,6 +6,8 @@ import {
   deletePullZone,
   deleteStorageZone,
   listStorageZones,
+  listPullZones,
+  purgePullZoneCache,
   listFiles,
   validateApiKey,
   BunnyApiError,
@@ -302,6 +304,65 @@ describe("deleteStorageZone", () => {
         expect(error.status).toBe(404);
       }
     }
+  });
+});
+
+describe("listPullZones", () => {
+  test("GETs all pull zones with an optional search term", async () => {
+    let capturedUrl = "";
+    mockFetch((url) => {
+      capturedUrl = url;
+      return new Response(JSON.stringify([{ Id: 1, Name: "blog-pre-pr-1" }]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    const result = await listPullZones(TEST_API_KEY, "blog-pre-");
+    const url = new URL(capturedUrl);
+    expect(url.origin + url.pathname).toBe("https://api.bunny.net/pullzone");
+    expect(url.searchParams.get("search")).toBe("blog-pre-");
+    expect(url.searchParams.get("perPage")).toBe("1000");
+    expect(result).toHaveLength(1);
+  });
+
+  test("omits search when not given", async () => {
+    let capturedUrl = "";
+    mockFetch((url) => {
+      capturedUrl = url;
+      return new Response(JSON.stringify([]), { status: 200 });
+    });
+
+    await listPullZones(TEST_API_KEY);
+    expect(new URL(capturedUrl).searchParams.has("search")).toBe(false);
+  });
+
+  test("handles Items wrapper response", async () => {
+    mockFetch(
+      () =>
+        new Response(JSON.stringify({ Items: [{ Id: 1 }, { Id: 2 }] }), {
+          status: 200,
+        }),
+    );
+
+    const result = await listPullZones(TEST_API_KEY);
+    expect(result).toHaveLength(2);
+  });
+});
+
+describe("purgePullZoneCache", () => {
+  test("POSTs to the purge endpoint", async () => {
+    let capturedUrl = "";
+    let capturedMethod = "";
+    mockFetch((url, init) => {
+      capturedUrl = url;
+      capturedMethod = init?.method ?? "";
+      return new Response(null, { status: 204 });
+    });
+
+    await purgePullZoneCache(TEST_API_KEY, 123);
+    expect(capturedMethod).toBe("POST");
+    expect(capturedUrl).toBe("https://api.bunny.net/pullzone/123/purgeCache");
   });
 });
 

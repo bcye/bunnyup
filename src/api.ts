@@ -161,6 +161,32 @@ export async function updatePullZoneStorageZone(
   });
 }
 
+export async function listPullZones(
+  apiKey: string,
+  search?: string,
+): Promise<PullZone[]> {
+  const params = new URLSearchParams({
+    page: "0",
+    perPage: "1000",
+    includeCertificate: "false",
+  });
+  if (search) params.set("search", search);
+  const result = await request<{ Items: PullZone[] } | PullZone[]>(
+    apiKey,
+    "GET",
+    `/pullzone?${params}`,
+  );
+  // API returns either { Items: [...] } or just [...]
+  return Array.isArray(result) ? result : result.Items;
+}
+
+export async function purgePullZoneCache(
+  apiKey: string,
+  pullZoneId: number,
+): Promise<void> {
+  await request<void>(apiKey, "POST", `/pullzone/${pullZoneId}/purgeCache`);
+}
+
 export async function deletePullZone(
   apiKey: string,
   id: number,

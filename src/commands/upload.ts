@@ -52,6 +52,11 @@ export interface UploadResult {
 
 export interface UploadOptions {
   force?: boolean;
+  /**
+   * Re-upload into an existing version instead of failing. Used by preview
+   * deploys, which should be safe to re-run (e.g. a retried CI job).
+   */
+  allowExisting?: boolean;
   nested?: boolean;
 }
 
@@ -130,6 +135,8 @@ export async function upload(
   if (storageZone) {
     if (options.force) {
       p.log.warn(`Version ${pc.cyan(gitHash)} exists, re-uploading (--force)`);
+    } else if (options.allowExisting) {
+      p.log.info(`Version ${pc.cyan(gitHash)} exists, re-uploading`);
     } else {
       p.cancel(
         `Version ${pc.cyan(gitHash)} already uploaded. Use --force to re-upload.`,
