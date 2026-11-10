@@ -2,12 +2,7 @@ import * as p from "@clack/prompts";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import pc from "picocolors";
-import {
-  addOrUpdateEdgeRule,
-  checkPullZoneAvailability,
-  createPullZone,
-  createStorageZone,
-} from "../api.ts";
+import { checkPullZoneAvailability, createStorageZone } from "../api.ts";
 import {
   CONFIG_FILE,
   getDefaultProjectName,
@@ -17,6 +12,8 @@ import {
   type ProjectConfig,
 } from "../config.ts";
 import { isGitRepo } from "../git.ts";
+import { validateProjectName } from "../naming.ts";
+import { createSitePullZone } from "../zones.ts";
 import { cleanup } from "./cleanup.ts";
 
 const WORKFLOW_URL =
@@ -95,12 +92,7 @@ export async function newProject(): Promise<void> {
           placeholder: defaultName,
           validate: (value) => {
             if (!value) return;
-            if (!/^[a-z0-9-]+$/i.test(value)) {
-              return "Name can only contain letters, numbers, and hyphens";
-            }
-            if (value.length < 3 || value.length > 60) {
-              return "Name must be between 3 and 60 characters";
-            }
+            return validateProjectName(value);
           },
         }),
       outputFolder: () =>
@@ -176,35 +168,11 @@ export async function newProject(): Promise<void> {
 
   // Create pull zone
   spinner.start("Creating pull zone...");
-  const pullZone = await createPullZone(apiKey, config.name, storageZone.Id);
-
-  // Override browser cache setting to immutable for known framework, hashed, assets
-  await addOrUpdateEdgeRule(apiKey, pullZone.Id, {
-    Guid: null,
-    ActionType: 25,
-    ActionParameter1: "public, max-age=31536000, immutable",
-    ActionParameter2: "",
-    ActionParameter3: "",
-    Triggers: [
-      {
-        Type: 0,
-        PatternMatches: [
-          "*/_next/static/*",
-          "*/_astro/*",
-          "*/_app/immutable/*",
-          "*/_nuxt/*",
-        ],
-        PatternMatchingType: 0,
-        Parameter1: "",
-      },
-    ],
-    ExtraActions: [],
-    TriggerMatchingType: 0,
-    Description: "",
-    Enabled: true,
-    OrderIndex: 0,
-    ReadOnly: false,
-  });
+  const pullZone = await createSitePullZone(
+    apiKey,
+    config.name,
+    storageZone.Id,
+  );
   spinner.stop("Pull zone created");
 
   // Save configuration

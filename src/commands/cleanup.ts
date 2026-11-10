@@ -13,6 +13,7 @@ import {
   requireApiKey,
   requireConfig,
 } from "../config.ts";
+import { filterDeploymentStorageZones } from "../zones.ts";
 
 export interface CleanupOptions {
   yes?: boolean;
@@ -39,9 +40,7 @@ export async function cleanup(
   spinner.start("Finding project resources");
 
   const allZones = await listStorageZones(apiKey);
-  const projectZones = allZones.filter((z) =>
-    z.Name.startsWith(`${config.name}-`),
-  );
+  const projectZones = filterDeploymentStorageZones(config.name, allZones);
 
   spinner.stop(
     `Found pull zone and ${projectZones.length} storage zone(s)`,
